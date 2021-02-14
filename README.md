@@ -12,7 +12,7 @@
 ChromeWebDriver 
 ### 1.构造方法
 只有一个入参，为chromedriver.exe的完整路径。请和本机的chrome版本相一致。    
-下载地址：http://npm.taobao.org/mirrors/chromedriver
+chromedriver下载地址：http://npm.taobao.org/mirrors/chromedriver
 ### 2.执行脚本
 ```
 //执行外部脚本，path为文件路径
