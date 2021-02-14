@@ -1,5 +1,24 @@
+//打开百度
 open http://www.baidu.com
+//输入搜索词
 type #kw www.iceolive.com
+//点击百度一下
 click #su
+//等待2秒
 sleep 2
+//点击第一个结果链接
 click '.result a'
+//设置存储值 a =1
+set a
+<script>
+    return 0
+</script>
+//循环5次
+repeat 5
+begin
+    //设置存储值 a = a+1
+    set a
+    <script>
+        return arguments[0]['a']+1;
+    </script>
+end

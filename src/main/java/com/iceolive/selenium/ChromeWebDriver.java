@@ -62,9 +62,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     case "switch":
                         if (Pattern.matches("^\\d+$", target)) {
                             webDriver.switchTo().frame(Integer.parseInt(target));
-                        } else if(target != null) {
+                        } else if (target != null) {
                             webDriver.switchTo().frame(target);
-                        }else {
+                        } else {
                             webDriver.switchTo().defaultContent();
                         }
                         break;
@@ -92,11 +92,35 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
                         break;
                     case "repeat":
-                        while ((Boolean) webDriver.executeScript(item.getStatement(), variableMap)) {
-                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
-                                run(item.getRepeatCommands());
+                        if (target != null) {
+                            int count = Integer.parseInt(target);
+                            while (count > 0) {
+                                if(item.getStatement() !=null){
+                                    if(!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)){
+                                        break;
+                                    }
+                                }
+                                if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                                    run(item.getRepeatCommands());
+                                }
+                                count--;
+                            }
+                        } else {
+                            while (true) {
+                                if(item.getStatement() !=null){
+                                    if(!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)){
+                                        break;
+                                    }
+                                }else{
+                                    System.out.println("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
+                                    break;
+                                }
+                                if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                                    run(item.getRepeatCommands());
+                                }
                             }
                         }
+
                         break;
                     case "when":
                         if ((Boolean) webDriver.executeScript(statement, variableMap)) {
@@ -267,30 +291,31 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         }
                     }
                     seleniumCmd.setStatement(statement);
-                    if (i + 1 < lines.length && "begin".equals(lines[i + 1].trim())) {
-                        Integer beginLineNum = i + 1;
-                        Integer endLineNum = null;
-                        int thenCount = 0;
-                        for (int j = i + 2; j < lines.length; j++) {
-                            if (lines[j].trim().equals("then") || lines[j].trim().equals("begin")) {
-                                thenCount++;
-                            }
-                            if (lines[j].trim().equals("end")) {
-                                if (thenCount == 0) {
-                                    i = j;
-                                    endLineNum = j;
-                                    break;
-                                }
-                                thenCount--;
-                            }
-                        }
-                        String[] repeatLines = new String[endLineNum - beginLineNum - 1];
-                        System.arraycopy(lines, beginLineNum + 1, repeatLines, 0, endLineNum - beginLineNum - 1);
 
-                        seleniumCmd.setRepeatCommands(parse(repeatLines));
-                    }
-                    list.add(seleniumCmd);
                 }
+                if (i + 1 < lines.length && "begin".equals(lines[i + 1].trim())) {
+                    Integer beginLineNum = i + 1;
+                    Integer endLineNum = null;
+                    int thenCount = 0;
+                    for (int j = i + 2; j < lines.length; j++) {
+                        if (lines[j].trim().equals("then") || lines[j].trim().equals("begin")) {
+                            thenCount++;
+                        }
+                        if (lines[j].trim().equals("end")) {
+                            if (thenCount == 0) {
+                                i = j;
+                                endLineNum = j;
+                                break;
+                            }
+                            thenCount--;
+                        }
+                    }
+                    String[] repeatLines = new String[endLineNum - beginLineNum - 1];
+                    System.arraycopy(lines, beginLineNum + 1, repeatLines, 0, endLineNum - beginLineNum - 1);
+
+                    seleniumCmd.setRepeatCommands(parse(repeatLines));
+                }
+                list.add(seleniumCmd);
             } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd()) {
                 if (i + 1 < lines.length && "<script>".equals(lines[i + 1].trim())) {
                     String statement = "";

@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -27,6 +27,17 @@ type #kw www.iceolive.com
 click #su
 sleep 2
 click '.result a'
+set a
+    <script>
+        return 0
+    </script>
+repeat 5
+begin
+    set a
+    <script>
+        return arguments[0]['a']+1;
+    </script>
+end
 ```
 ### 4.测试代码
 ```java
@@ -110,10 +121,11 @@ exec
 ### 10.存储值
 必须有return，return的值将会存储在map中。    
 如要在\<script>\</script>中获取设置过的值，可以通过argument[0][key]获取。
-
+问：为什么不直接设计成一行，如 set a = 1 ?    
+答：因为这样的正则处理起来太麻烦，而且大部分赋值操作都是json对象和数组，所以统一js处理。
 ```js
-//name1 为存储的key
-set name1
+//a 为存储的key
+set a
 <script>
     return 1;
 </script>
@@ -173,8 +185,19 @@ else
 end
 ```
 ### 14.循环指令
+- 指定循环次数    
+当指定循环次数时，可不添加\<script>\</script>控制脚本，当然也可以使用脚本，当脚本return false则可提前退出循环。    
+注意：脚本判断在执行循环前执行。
+```js
+repeat 10
+begin
+  click #nextBtn
+end
+```
+- 不指定循环次数
 repeat后面必须紧跟着\<script>\</script>,然后才跟着begin,end。    
-js脚本必须有return，且返回值为boolean型,返回值为false时退出循环    
+js脚本必须有return，且返回值为boolean型,返回值为false时退出循环     
+注意：脚本判断在执行循环前执行。     
 ```js
 set flag
 <script>
