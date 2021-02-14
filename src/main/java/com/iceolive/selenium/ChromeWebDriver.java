@@ -1,6 +1,5 @@
 package com.iceolive.selenium;
 
-import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -724,4 +723,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     public void resetInputState() {
         webDriver.resetInputState();
     }
+
+
 }
