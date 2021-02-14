@@ -12,7 +12,24 @@ boolean runFromFile(String path);
 //执行字符串脚本
 boolean run(String cmd);
 ```
-程序附带了单元测试，可供参考
+### 3.测试代码
+```java
+   //杀掉所有chromedriver进程
+   ChromeUtil.killChromeDriver();
+   ChromeWebDriver webDriver = new ChromeWebDriver(System.getProperty("user.dir") + "\\webdriver\\chromedriver.exe");
+
+   boolean result = webDriver.runFromFile(System.getProperty("user.dir") +"\\tests\\test.txt");
+   if(result){
+       System.out.println("执行完毕");
+   }else{
+       System.out.println("执行出错");
+   }
+   //打印所有的变量
+   System.out.println(webDriver.getVariableMap());
+   webDriver.close();
+   webDriver.quit();
+
+```
 ## 二、目录说明
 - tests目录为测试脚本目录，里面附带了一个测试脚本    
 - webdriver为驱动程序目录，当前驱动为88.0.4324.96   
@@ -45,32 +62,36 @@ clear '#username'
 //第二个参数为css选择器，同document.querySelector
 click '#btn'
 ```
-### 5.拖动元素
+### 5.触发回车
+```js
+enter '#username'
+```
+### 6.拖动元素
 ```js
 //第二个参数为css选择器，同document.querySelector
 //第三个参数为拖动的位置
 drag '#username' '300,0'
 ```
-### 6.滚动条
+### 7.滚动条
 ```js
 //第二个参数为滚动的坐标位置。
 scroll '0,1314'
 ```
-### 7.切进iframe
+### 8.切进iframe
 如果你需要控制的元素在iframe里面，你必须执行切换才可操作他们。
 ```js
 //第二个参数为iframe的id或name，也可以用数字表示第几个。
 //如果不带第二个参数,则切回主文档
 switch 'frame';
 ```
-### 8.执行js
+### 9.执行js
 ```js
 exec
 <script>
  alert(1);
 </script>
 ```
-### 9.存储值
+### 10.存储值
 必须有return，return的值将会存储在map中。    
 如要在\<script>\</script>中获取设置过的值，可以通过argument[0][key]获取。
 
@@ -81,12 +102,12 @@ set name1
     return 1;
 </script>
 ```
-### 10.强制等待
+### 11.强制等待
 ```js
 //第二个参数为等待的秒数,这里可以为小数，如0.5表示等待0.5秒
 sleep 2
 ```
-### 11.等待并执行操作（目前只支持两种等待）
+### 12.等待并执行操作（目前只支持两种等待）
 该指令不一定需要带then和else操作。
 ```js
 //等待元素可见
@@ -115,7 +136,7 @@ else
   click '#btn2'
 end
 ```
-### 12.逻辑判断
+### 13.逻辑判断
 when后面必须紧跟着\<script>\</script>,然后才跟着then,else,end。else如果没有内容可省略。    
 js脚本必须有return，且返回值为boolean型。
 ```js
@@ -135,7 +156,7 @@ else
     click '#btn2'
 end
 ```
-### 13.循环指令
+### 14.循环指令
 repeat后面必须紧跟着\<script>\</script>,然后才跟着begin,end。    
 js脚本必须有return，且返回值为boolean型,返回值为false时退出循环    
 ```js
@@ -155,11 +176,11 @@ begin
    </script>
 end
 ```
-### 14.页面提示语
+### 15.页面提示语
 ```js
 alert '提示内容'
 ```
-### 15.将网页下载存储值
+### 16.将网页下载存储值
 ```js
 //第二个参数为存储值的key，值必须为对象数组，即[{a:1,b:2},{a:3,b:4}]。
 //第三个参数为保存的文件名，文件名暂不支持变量

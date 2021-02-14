@@ -1,0 +1,5 @@
+open http://www.baidu.com
+type #kw www.iceolive.com
+click #su
+sleep 2
+click '.result a'
