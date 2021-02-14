@@ -15,52 +15,55 @@ boolean run(String cmd);
 ## 二、目录说明
 - tests目录为测试脚本目录    
 - webdriver为驱动程序目录，当前驱动为88.0.4324.96   
-## 三、脚本语法说明：
+## 三、开发背景
+selenium是个强大的自动化测试工具，但是我还是想让它和js脚本语言一样，支持解释执行。并且我希望它的语法还能更简单一些。    
+为了支持我在运行时修改脚本，无需重新编译，并且减少代码量需求，所以开发了这样看起来有点蹩脚的脚本语言。
+## 四、脚本语法说明：
 - 第一个参数为指令
 - 其他行内参数请用单引号包裹，如参数没有包含空格，也可省略单引号。
 - js脚本请使用 \<script> 和\</script>包裹，且需独占一行。
 - begin,then,else,end为包裹多条指令用，需独占一行，
 ### 1.打开页面
-```
+```js
 //第二个参数为网址
 open 'http://www.baidu.com'
 ```
 ### 2.文本框输入内容
-```
+```js
 //第二个参数为css选择器，同document.querySelector
 //第三个参数为输入的值，如需清除值，请使用clear命令
 type '#username' 'wangmainzhe'
 ```
 ### 3.清除文本框内容
-```
+```js
 //第二个参数为css选择器，同document.querySelector
 clear '#username'
 ```
 ### 4.点击按钮
-```
+```js
 //第二个参数为css选择器，同document.querySelector
 click '#btn'
 ```
 ### 5.拖动元素
-```
+```js
 //第二个参数为css选择器，同document.querySelector
 //第三个参数为拖动的位置
 drag '#username' '300,0'
 ```
 ### 6.滚动条
-```
+```js
 //第二个参数为滚动的坐标位置。
 scroll '0,1314'
 ```
 ### 7.切进iframe
 如果你需要控制的元素在iframe里面，你必须执行切换才可操作他们。
-```
+```js
 //第二个参数为iframe的id或name，也可以用数字表示第几个。
 //如果不带第二个参数,则切回主文档
 switch 'frame';
 ```
 ### 8.执行js
-```
+```js
 exec
 <script>
  alert(1);
@@ -70,7 +73,7 @@ exec
 必须有return，return的值将会存储在map中。    
 如要在\<script>\</script>中获取设置过的值，可以通过argument[0][key]获取。
 
-```
+```js
 //name1 为存储的key
 set name1
 <script>
@@ -78,13 +81,13 @@ set name1
 </script>
 ```
 ### 10.强制等待
-```
+```js
 //第二个参数为等待的秒数,这里可以为小数，如0.5表示等待0.5秒
 sleep 2
 ```
 ### 11.等待并执行操作（目前只支持两种等待）
 该指令不一定需要带then和else操作。
-```
+```js
 //等待元素可见
 //第二个参数为css选择器，同document.querySelector
 //第三个参数固定visible
@@ -114,7 +117,7 @@ end
 ### 12.逻辑判断
 when后面必须紧跟着\<script>\</script>,然后才跟着then,else,end。else如果没有内容可省略。    
 js脚本必须有return，且返回值为boolean型。
-```
+```js
 set flag
 <script>
   return true
@@ -134,7 +137,7 @@ end
 ### 13.循环指令
 repeat后面必须紧跟着\<script>\</script>,然后才跟着begin,end。    
 js脚本必须有return，且返回值为boolean型,返回值为false时退出循环    
-```
+```js
 set flag
 <script>
   return 1
@@ -152,11 +155,11 @@ begin
 end
 ```
 ### 14.页面提示语
-```
+```js
 alert '提示内容'
 ```
 ### 15.将网页下载存储值
-```
+```js
 //第二个参数为存储值的key，值必须为对象数组，即[{a:1,b:2},{a:3,b:4}]。
 //第三个参数为保存的文件名，文件名暂不支持变量
 saveCsv list list.csv
