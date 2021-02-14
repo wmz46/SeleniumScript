@@ -12,8 +12,9 @@ boolean runFromFile(String path);
 //执行字符串脚本
 boolean run(String cmd);
 ```
+程序附带了单元测试，可供参考
 ## 二、目录说明
-- tests目录为测试脚本目录    
+- tests目录为测试脚本目录，里面附带了一个测试脚本    
 - webdriver为驱动程序目录，当前驱动为88.0.4324.96   
 ## 三、开发背景
 selenium是个强大的自动化测试工具，但是我还是想让它和js脚本语言一样，支持解释执行。并且我希望它的语法还能更简单一些。    
