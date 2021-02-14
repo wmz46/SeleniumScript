@@ -1,5 +1,13 @@
 # SeleniumScript
 基于selenium-java的自定义脚本语言工具类
+当前最新版本
+```xml
+ <dependency>
+    <groupId>com.iceolive</groupId>
+    <artifactId>selenium-script</artifactId>
+    <version>0.0.2</version>
+</dependency>
+```
 ## 一、工具类介绍
 ChromeWebDriver 
 ### 1.构造方法
@@ -12,7 +20,15 @@ boolean runFromFile(String path);
 //执行字符串脚本
 boolean run(String cmd);
 ```
-### 3.测试代码
+### 3.测试脚本
+```js
+open http://www.baidu.com
+type #kw www.iceolive.com
+click #su
+sleep 2
+click '.result a'
+```
+### 4.测试代码
 ```java
    //杀掉所有chromedriver进程
    ChromeUtil.killChromeDriver();

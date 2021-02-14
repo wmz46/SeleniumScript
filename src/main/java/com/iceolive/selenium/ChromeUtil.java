@@ -7,7 +7,6 @@ import java.io.IOException;
 /**
  * @author wangmianzhe
  */
-@Slf4j
 public class ChromeUtil {
 
 
@@ -18,7 +17,7 @@ public class ChromeUtil {
         try {
             Runtime.getRuntime().exec("taskkill /F  /FI \"IMAGENAME eq chromedriver.exe\"");
         }catch (IOException e){
-            log.error(e.toString(),e);
+            e.printStackTrace();
         }
 
     }

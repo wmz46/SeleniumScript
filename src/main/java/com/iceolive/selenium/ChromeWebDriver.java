@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 /**
  * @author wangmianzhe
  */
-@Slf4j
 public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScreenshot, WrapsDriver, HasInputDevices, HasTouchScreen, Interactive, HasCapabilities {
     private EventFiringWebDriver webDriver;
 
@@ -125,7 +124,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
                                 run(item.getElseCommands());
                             }
-                            log.error("wait超时:" + item.toString());
+                            System.out.println("wait超时:" + item.toString());
                         }
                         break;
                     case "saveJson":
@@ -140,7 +139,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             }
             return true;
         } catch (Exception e) {
-            log.error(e.toString(), e);
+            e.printStackTrace();
             return false;
         }
     }
