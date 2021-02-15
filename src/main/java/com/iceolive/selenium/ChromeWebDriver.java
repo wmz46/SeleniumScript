@@ -11,9 +11,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.regex.Pattern;
 
 
@@ -34,143 +32,151 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         webDriver = new EventFiringWebDriver(chromeDriver);
     }
 
-    private boolean run(List<SeleniumCmd> list) {
-        try {
-            for (int i = 0; i < list.size(); i++) {
-                SeleniumCmd item = list.get(i);
-                String command = item.getCommand();
-                String target = item.getTarget();
-                String value = item.getValue();
-                Integer timeout = item.getTimeout();
-                String statement = item.getStatement();
-                switch (command) {
-                    case "set":
-                        Object obj = webDriver.executeScript(statement, variableMap);
-                        variableMap.put(target, obj);
-                        break;
-
-                    case "alert":
-                        this.alert(target);
-                        break;
-                    case "exec":
-                        webDriver.executeScript(statement, variableMap);
-                        break;
-                    case "scroll":
-                        webDriver.executeScript("window.scrollBy(" + target + ");");
-                        break;
-                    case "switch":
-                        if (Pattern.matches("^\\d+$", target)) {
-                            webDriver.switchTo().frame(Integer.parseInt(target));
-                        } else if (target != null) {
-                            webDriver.switchTo().frame(target);
-                        } else {
-                            webDriver.switchTo().defaultContent();
-                        }
-                        break;
-                    case "sleep":
+    private void run(List<SeleniumCmd> list) {
+        for (int i = 0; i < list.size(); i++) {
+            SeleniumCmd item = list.get(i);
+            String command = item.getCommand();
+            String target = item.getTarget();
+            String value = item.getValue();
+            Integer timeout = item.getTimeout();
+            String statement = item.getStatement();
+            switch (command) {
+                case "set":
+                    Object obj = webDriver.executeScript(statement, variableMap);
+                    variableMap.put(target, obj);
+                    break;
+                case "alert":
+                    this.alert(target);
+                    break;
+                case "exec":
+                    webDriver.executeScript(statement, variableMap);
+                    break;
+                case "scroll":
+                    webDriver.executeScript("window.scrollBy(" + target + ");");
+                    break;
+                case "switch":
+                    if (Pattern.matches("^\\d+$", target)) {
+                        webDriver.switchTo().frame(Integer.parseInt(target));
+                    } else if (target != null) {
+                        webDriver.switchTo().frame(target);
+                    } else {
+                        webDriver.switchTo().defaultContent();
+                    }
+                    break;
+                case "sleep":
+                    try {
                         Thread.sleep((long) (Float.parseFloat(target) * 1000));
-                        break;
-                    case "open":
-                        webDriver.get(target);
-                        break;
-                    case "clear":
-                        webDriver.findElement(By.cssSelector(target)).clear();
-                        break;
-                    case "type":
-                        webDriver.findElement(By.cssSelector(target)).sendKeys(value);
-                        break;
-                    case "enter":
-                        webDriver.findElement(By.cssSelector(target)).sendKeys(Keys.ENTER);
-                        break;
-                    case "click":
-                        webDriver.findElement(By.cssSelector(target)).click();
-                        break;
-                    case "drag":
-                        WebElement element = webDriver.findElement(By.cssSelector(target));
-                        Actions builder = new Actions(webDriver);
-                        builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
-                        break;
-                    case "repeat":
-                        if (target != null) {
-                            int count = Integer.parseInt(target);
-                            while (count > 0) {
-                                if(item.getStatement() !=null){
-                                    if(!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)){
-                                        break;
-                                    }
-                                }
-                                if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
-                                    run(item.getRepeatCommands());
-                                }
-                                count--;
-                            }
-                        } else {
-                            while (true) {
-                                if(item.getStatement() !=null){
-                                    if(!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)){
-                                        break;
-                                    }
-                                }else{
-                                    System.out.println("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
+                    } catch (InterruptedException e) {
+
+                    }
+                    break;
+                case "open":
+                    webDriver.get(target);
+                    break;
+                case "clear":
+                    webDriver.findElement(By.cssSelector(target)).clear();
+                    break;
+                case "type":
+                    webDriver.findElement(By.cssSelector(target)).sendKeys(value);
+                    break;
+                case "enter":
+                    webDriver.findElement(By.cssSelector(target)).sendKeys(Keys.ENTER);
+                    break;
+                case "click":
+                    webDriver.findElement(By.cssSelector(target)).click();
+                    break;
+                case "drag":
+                    WebElement element = webDriver.findElement(By.cssSelector(target));
+                    Actions builder = new Actions(webDriver);
+                    builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
+                    break;
+                case "repeat":
+                    if (target != null) {
+                        int count = Integer.parseInt(target);
+                        while (count > 0) {
+                            if (item.getStatement() != null) {
+                                if (!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)) {
                                     break;
                                 }
-                                if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
-                                    run(item.getRepeatCommands());
+                            }
+                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                                run(item.getRepeatCommands());
+                            }
+                            count--;
+                        }
+                    } else {
+                        while (true) {
+                            if (item.getStatement() != null) {
+                                if (!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)) {
+                                    break;
                                 }
+                            } else {
+                                System.out.println("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
+                                break;
+                            }
+                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                                run(item.getRepeatCommands());
                             }
                         }
+                    }
 
-                        break;
-                    case "when":
-                        if ((Boolean) webDriver.executeScript(statement, variableMap)) {
-                            if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
-                                run(item.getThenCommands());
-                            }
-                        } else {
-                            if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
-                                run(item.getElseCommands());
-                            }
+                    break;
+                case "when":
+                    if ((Boolean) webDriver.executeScript(statement, variableMap)) {
+                        if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
+                            run(item.getThenCommands());
                         }
-                        break;
-                    case "wait":
-                        try {
-                            WebDriverWait wait = new WebDriverWait(webDriver, timeout, 100);
-                            if ("visible".equals(value)) {
-                                wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
-                            } else if ("url".equals(value)) {
-                                wait.until(ExpectedConditions.urlMatches(target));
-                            }
-                            if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
-                                run(item.getThenCommands());
-                            }
-                        } catch (TimeoutException e) {
-                            if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
-                                run(item.getElseCommands());
-                            }
-                            System.out.println("wait超时:" + item.toString());
+                    } else {
+                        if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
+                            run(item.getElseCommands());
                         }
-                        break;
-                    case "saveJson":
-                        download(target, value, "json");
-                        break;
-                    case "saveCsv":
-                        download(target, value, "csv");
-                        break;
-                    default:
-                        break;
-                }
+                    }
+                    break;
+                case "wait":
+                    try {
+                        WebDriverWait wait = new WebDriverWait(webDriver, timeout, 100);
+                        if ("visible".equals(value)) {
+                            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
+                        } else if ("url".equals(value)) {
+                            wait.until(ExpectedConditions.urlMatches(target));
+                        }
+                        if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
+                            run(item.getThenCommands());
+                        }
+                    } catch (TimeoutException e) {
+                        if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
+                            run(item.getElseCommands());
+                        }
+                        System.out.println("wait超时:" + item.toString());
+                    }
+                    break;
+                case "saveJson":
+                    download(target, value, "json");
+                    break;
+                case "saveCsv":
+                    download(target, value, "csv");
+                    break;
+                default:
+                    break;
             }
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
+    /**
+     * 获取所有的存储值
+     *
+     * @return
+     */
     public Map<String, Object> getVariableMap() {
         return variableMap;
     }
 
+    /**
+     * 根据key获取存储值
+     *
+     * @param key
+     * @return
+     */
     public Object getVariable(String key) {
         return variableMap.get(key);
     }
@@ -339,10 +345,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     /**
      * 同步执行脚本
      *
-     * @param cmd
-     * @return
+     * @param cmd 脚本
      */
-    public boolean run(String cmd) {
+    public void run(String cmd) {
         if (cmd != null) {
             String[] lines = cmd.split("\n");
             //清理注释和空行
@@ -353,19 +358,17 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 }
             }
             List<SeleniumCmd> list = parse(cmds.toArray(new String[0]));
-            return run(list);
+            run(list);
         }
-        return false;
     }
 
     /**
      * 从文件执行脚本,文件编码utf-8
      *
      * @param path 文件路径
-     * @return
      */
-    public boolean runFromFile(String path) {
-        return runFromFile(path, "utf-8");
+    public void runFromFile(String path) {
+        runFromFile(path, "utf-8");
     }
 
     /**
@@ -373,9 +376,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
      *
      * @param path    文件路径
      * @param charset 文件编码
-     * @return
      */
-    public boolean runFromFile(String path, String charset) {
+    public void runFromFile(String path, String charset) {
 
         StringBuffer sb = new StringBuffer();
         InputStreamReader inputStreamReader = null;
@@ -403,7 +405,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             } catch (Exception e) {
             }
         }
-        return run(sb.toString());
+        run(sb.toString());
     }
 
     /**
@@ -412,15 +414,16 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
      * @param cmd param callback
      * @return
      */
-    public Thread runAsync(String cmd, Consumer<Boolean> callback) {
+    public Thread runAsync(String cmd, BiConsumer<Boolean, Exception> callback) {
         Thread t1 = new Thread(() -> {
             if (cmd != null) {
                 String[] lines = cmd.split("\n");
                 List<SeleniumCmd> list = parse(lines);
-                if (run(list)) {
-                    callback.accept(true);
-                } else {
-                    callback.accept(false);
+                try {
+                    run(list);
+                    callback.accept(true, null);
+                } catch (Exception e) {
+                    callback.accept(false, e);
                 }
             }
         });

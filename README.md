@@ -44,13 +44,13 @@ end
    //杀掉所有chromedriver进程
    ChromeUtil.killChromeDriver();
    ChromeWebDriver webDriver = new ChromeWebDriver(System.getProperty("user.dir") + "\\webdriver\\chromedriver.exe");
-
-   boolean result = webDriver.runFromFile(System.getProperty("user.dir") +"\\tests\\test.txt");
-   if(result){
+   try{
+       webDriver.runFromFile(System.getProperty("user.dir") +"\\tests\\test.txt");   
        System.out.println("执行完毕");
-   }else{
-       System.out.println("执行出错");
+   }catch(Exception e){
+       System.out.println("执行出错:"+e.toString());
    }
+
    //打印所有的变量
    System.out.println(webDriver.getVariableMap());
    webDriver.close();
