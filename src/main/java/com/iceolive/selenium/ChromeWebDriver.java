@@ -272,7 +272,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                                 seleniumCmd.setThenCommands(parse(thenLines));
                             }
                         }
-                        list.add(seleniumCmd);
                         i = endLineNum;
                     }
                     list.add(seleniumCmd);
