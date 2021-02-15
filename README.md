@@ -16,9 +16,9 @@ chromedriver下载地址：http://npm.taobao.org/mirrors/chromedriver
 ### 2.主要方法
 ```
 //执行外部脚本，path为文件路径
-boolean runFromFile(String path);
+void runFromFile(String path);
 //执行字符串脚本
-boolean run(String cmd);
+void run(String cmd);
 ```
 ### 3.测试脚本
 ```js
@@ -28,9 +28,9 @@ click #su
 sleep 2
 click '.result a'
 set a
-    <script>
-        return 0
-    </script>
+<script>
+    return 0
+</script>
 repeat 5
 begin
     set a
