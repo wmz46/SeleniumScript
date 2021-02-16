@@ -62,6 +62,7 @@ releases提供了一个可执行jar包的下载，也可通过clone本项目，�
 ### 使用方法
 下载SeleniumScript.jar后，将chromedriver.exe放到同级目录下，命令行执行
 ```cmd
+:: 脚本后缀不必是txt，这里只是举个例子
 java -jar SeleniumScript.jar -s "D://你的测试脚本.txt"
 :: 或者
 java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
