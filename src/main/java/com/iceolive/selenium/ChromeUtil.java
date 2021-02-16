@@ -1,6 +1,8 @@
 package com.iceolive.selenium;
 
 
+import org.openqa.selenium.chrome.ChromeDriver;
+
 import java.io.IOException;
 
 /**
@@ -21,6 +23,29 @@ public class ChromeUtil {
 
     }
 
+    public static void main(String[] args) {
+        String script = "";
+        for (int i = 0; args != null && i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-s")) {
+                script = args[++i];
+            } else if (arg.equals("-script")) {
+                script = args[++i];
+            }
+        }
+        ChromeWebDriver webDriver = new ChromeWebDriver(System.getProperty("user.dir") + "\\chromedriver.exe");
+        webDriver.addWebDriverCloseEvent(()->{
+           webDriver.quit();
+        });
+        try {
+            webDriver.runFromFile(script);
+            //打印所有的变量
+            System.out.println(webDriver.getVariableMap());
+            System.out.println("执行完毕");
+        } catch (Exception e) {
+            System.out.println("执行出错:" + e.toString());
+        }
+    }
 
 
 }
