@@ -58,7 +58,7 @@ end
 
 ```
 ## 二、可执行jar包
-releases提供了一个可执行jar包的下载
+releases提供了一个可执行jar包的下载，也可通过clone本项目，通过mvn package自行打包。
 ### 使用方法
 下载SeleniumScript.jar后，将chromedriver.exe放到同级目录下，命令行执行
 ```cmd
