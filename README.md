@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -22,8 +22,9 @@ void run(String cmd);
 ```
 ### 3.测试脚本
 ```js
+set keyword www.iceolive.com
 open http://www.baidu.com
-type #kw www.iceolive.com
+type #kw %keyword%
 click #su
 sleep 2
 click '.result a'
@@ -60,7 +61,8 @@ end
 ## 二、可执行jar包
 releases提供了一个可执行jar包的下载，也可通过clone本项目，通过mvn package自行打包。
 ### 使用方法
-下载SeleniumScript.jar后，将chromedriver.exe放到同级目录下，命令行执行
+下载SeleniumScript.jar后，将chromedriver.exe放到同级目录下，命令行执行    
+注意：脚本文件编码请使用utf-8，否则中文将会乱码          
 ```cmd
 :: 脚本后缀不必是txt，这里只是举个例子
 java -jar SeleniumScript.jar -s "D://你的测试脚本.txt"
@@ -78,6 +80,7 @@ selenium是个强大的自动化测试工具，但是我还是想让它和js脚�
 - 其他行内参数请用单引号包裹，如参数没有包含空格，也可省略单引号。
 - js脚本请使用 \<script> 和\</script>包裹，且标签需独占一行。
 - begin,then,else,end为包裹多条指令用，需独占一行，
+- 行内除了第一个参数外，其他参数均可使用`%变量名%`动态赋值，本质都是替换字符串。
 ### 1.打开页面
 ```js
 //第二个参数为网址
@@ -131,9 +134,13 @@ exec
 ### 10.存储值
 必须有return，return的值将会存储在map中。    
 如要在\<script>\</script>中获取设置过的值，可以通过argument[0][key]获取。
-问：为什么不直接设计成一行，如 set a = 1 ?    
-答：因为这样的正则处理起来太麻烦，而且大部分赋值操作都是json对象和数组，所以统一js处理。
 ```js
+//字符串赋值
+//a 为存储的key
+set a 123
+```
+```js
+//复杂类型赋值，支持object,array,number,string
 //a 为存储的key
 set a
 <script>

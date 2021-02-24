@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -32,17 +33,42 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         webDriver = new EventFiringWebDriver(chromeDriver);
     }
 
+    /**
+     * 替换变量，替换%变量名%
+     *
+     * @param str
+     * @return
+     */
+    private String replaceVariable(String str) {
+        if (str == null || str.length() == 0) {
+            return str;
+        }
+        Matcher matcher = Pattern.compile("%(.*?)%").matcher(str);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            if (variableMap.containsKey(key)) {
+                str = str.replace("%" + key + "%", String.valueOf(variableMap.get(key)));
+            }
+        }
+        return str;
+    }
+
     private void run(List<SeleniumCmd> list) {
         for (int i = 0; i < list.size(); i++) {
             SeleniumCmd item = list.get(i);
             String command = item.getCommand();
-            String target = item.getTarget();
-            String value = item.getValue();
-            Integer timeout = item.getTimeout();
+            String target = replaceVariable(item.getTarget());
+            String value = replaceVariable(item.getValue());
+            Integer timeout = Integer.parseInt(replaceVariable(item.getTimeout()));
             String statement = item.getStatement();
             switch (command) {
                 case "set":
-                    Object obj = webDriver.executeScript(statement, variableMap);
+                    Object obj = null;
+                    if (value != null) {
+                        obj = value;
+                    } else {
+                        obj = webDriver.executeScript(statement, variableMap);
+                    }
                     variableMap.put(target, obj);
                     break;
                 case "alert":
@@ -332,6 +358,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         }
                     }
                     seleniumCmd.setStatement(statement);
+                    list.add(seleniumCmd);
+                } else if (seleniumCmd.getValue() != null) {
                     list.add(seleniumCmd);
                 }
             } else if (seleniumCmd.isCommand()) {

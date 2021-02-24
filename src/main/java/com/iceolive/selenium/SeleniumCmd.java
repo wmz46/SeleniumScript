@@ -14,7 +14,7 @@ public class SeleniumCmd {
     private String command;
     private String target;
     private String value;
-    private Integer timeout;
+    private String timeout;
     private List<SeleniumCmd> thenCommands;
     private List<SeleniumCmd> elseCommands;
     private List<SeleniumCmd> repeatCommands;
@@ -24,23 +24,33 @@ public class SeleniumCmd {
         return this.command != null;
     }
 
-    public boolean isSetCmd(){
+    public boolean isSetCmd() {
         return "set".equals(this.command);
     }
-    public boolean isExecCmd(){
+
+    public boolean isExecCmd() {
         return "exec".equals(this.command);
     }
+
     public boolean isWaitCmd() {
         return "wait".equals(this.command);
     }
-    public boolean isRepeatCmd(){
+
+    public boolean isRepeatCmd() {
         return "repeat".equals(this.command);
     }
-    public boolean isWhenCmd(){return "when".equals(this.command);}
+
+    public boolean isWhenCmd() {
+        return "when".equals(this.command);
+    }
 
     public SeleniumCmd(String line) {
-        if(Pattern.matches("^\\s*//.*?",line)){
+        if (Pattern.matches("^\\s*//.*?", line)) {
             return;
+        }
+        // UTF-8 byte order mark (EF BB BF)
+        if (line.startsWith("\uFEFF")) {
+            line = line.substring(1);
         }
         Pattern pattern = Pattern.compile("^\\s*([^\\s]+)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)");
         Matcher matcher = pattern.matcher(line);
@@ -61,12 +71,12 @@ public class SeleniumCmd {
                     this.value = matcher.group(11);
                 }
             }
-            this.timeout = 3;
+            this.timeout = "3";
             if (matcher.groupCount() > 15) {
                 if (matcher.group(16) != null) {
-                    this.timeout = Integer.parseInt(matcher.group(16));
-                } else  if (matcher.group(15) != null) {
-                    this.timeout = Integer.parseInt(matcher.group(15));
+                    this.timeout = matcher.group(16);
+                } else if (matcher.group(15) != null) {
+                    this.timeout = matcher.group(15);
                 }
             }
         }
