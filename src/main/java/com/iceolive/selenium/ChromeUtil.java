@@ -25,15 +25,19 @@ public class ChromeUtil {
 
     public static void main(String[] args) {
         String script = "";
+        String driver =System.getProperty("user.dir") + "\\chromedriver.exe";
         for (int i = 0; args != null && i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-s")) {
                 script = args[++i];
             } else if (arg.equals("-script")) {
                 script = args[++i];
+            }else if(arg.equals("-driver")){
+                driver = args[++i];
+
             }
         }
-        ChromeWebDriver webDriver = new ChromeWebDriver(System.getProperty("user.dir") + "\\chromedriver.exe");
+        ChromeWebDriver webDriver = new ChromeWebDriver(driver);
         webDriver.addWebDriverCloseEvent(()->{
            webDriver.quit();
         });
