@@ -9,6 +9,8 @@ import org.openqa.selenium.support.events.WebDriverEventListener;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
@@ -19,8 +21,9 @@ import java.util.regex.Pattern;
 /**
  * @author wangmianzhe
  */
-public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScreenshot, WrapsDriver, HasInputDevices, HasTouchScreen, Interactive, HasCapabilities {
-    private EventFiringWebDriver webDriver;
+public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScreenshot, Interactive, HasCapabilities {
+
+    private ChromeDriver webDriver;
 
     private Map<String, Object> variableMap = new HashMap<>();
 
@@ -29,8 +32,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
-        ChromeDriver chromeDriver = new ChromeDriver(chromeOptions);
-        webDriver = new EventFiringWebDriver(chromeDriver);
+        webDriver = new ChromeDriver(chromeOptions);
     }
 
     /**
@@ -62,6 +64,33 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             Integer timeout = Integer.parseInt(replaceVariable(item.getTimeout()));
             String statement = item.getStatement();
             switch (command) {
+
+                case "screenshot":
+                    try {
+                        WebElement element1 = webDriver.findElement(By.cssSelector(target));
+                        if(element1.isDisplayed()) {
+                            Long fullWidth = (long)webDriver.executeScript("return document.documentElement.scrollWidth");
+                            Long fullHeight =(long) webDriver.executeScript("return document.documentElement.scrollHeight");
+                            Dimension dimension = new Dimension(fullWidth.intValue(), fullHeight.intValue());
+                            Dimension originalSize = webDriver.manage().window().getSize();
+                            webDriver.manage().window().setSize(dimension);
+                            byte[] byteArray = webDriver.getScreenshotAs(OutputType.BYTES);
+                            ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
+                            BufferedImage img = ImageIO.read(bais);
+                            Rectangle rect = element1.getRect();
+                            //从元素左上角坐标开始，按照元素的高宽对img进行裁剪为符合需要的图片
+                            BufferedImage dest = img.getSubimage(rect.x, rect.y, rect.width, rect.height);
+                            ImageIO.write(dest, "png", new File(value));
+
+                            webDriver.manage().window().setSize(originalSize);
+                        }else{
+                            System.err.println("元素不可见，无法截图："+item.toString());
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 case "set":
                     Object obj = null;
                     if (value != null) {
@@ -493,7 +522,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     public Thread addWebDriverCloseEvent(Runnable func) {
         return addWebDriverEvent((() -> {
             try {
-                webDriver.getCurrentUrl();
+                webDriver.getWindowHandle();
                 return true;
             } catch (UnhandledAlertException e) {
                 //弹窗阻塞情况下不退出循环
@@ -631,13 +660,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         webDriver.executeScript(sb.toString());
     }
 
-    public EventFiringWebDriver register(WebDriverEventListener eventListener) {
-        return webDriver.register(eventListener);
-    }
-
-    public EventFiringWebDriver unregister(WebDriverEventListener eventListener) {
-        return webDriver.unregister(eventListener);
-    }
 
     @Override
     public Capabilities getCapabilities() {
@@ -724,25 +746,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         return webDriver.manage();
     }
 
-    @Override
-    public WebDriver getWrappedDriver() {
-        return webDriver.getWrappedDriver();
-    }
-
-    @Override
-    public Keyboard getKeyboard() {
-        return webDriver.getKeyboard();
-    }
-
-    @Override
-    public Mouse getMouse() {
-        return webDriver.getMouse();
-    }
-
-    @Override
-    public TouchScreen getTouch() {
-        return webDriver.getTouch();
-    }
 
     @Override
     public void perform(Collection<Sequence> collection) {

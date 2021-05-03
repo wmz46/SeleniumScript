@@ -19,6 +19,7 @@ public class SeleniumCmd {
     private List<SeleniumCmd> elseCommands;
     private List<SeleniumCmd> repeatCommands;
     private String statement;
+    private String line;
 
     public boolean isCommand() {
         return this.command != null;
@@ -45,6 +46,7 @@ public class SeleniumCmd {
     }
 
     public SeleniumCmd(String line) {
+        this.line = line;
         if (Pattern.matches("^\\s*//.*?", line)) {
             return;
         }
@@ -80,5 +82,9 @@ public class SeleniumCmd {
                 }
             }
         }
+    }
+    @Override
+    public String toString(){
+        return this.line;
     }
 }
