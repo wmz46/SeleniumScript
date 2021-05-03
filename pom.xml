@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
     <description>基于selenium-java的自定义脚本语言工具类</description>
     <licenses>
         <license>

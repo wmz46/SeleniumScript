@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -68,6 +68,8 @@ releases提供了一个可执行jar包的下载，也可通过clone本项目，�
 java -jar SeleniumScript.jar -s "D://你的测试脚本.txt"
 :: 或者
 java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
+:: 指定驱动路径
+java -jar SeleniumScript.jar -script "D://你的测试脚本.txt" -driver "D://chromedriver.exe"
 ```
 ## 三、目录说明
 - tests目录为测试脚本目录，里面附带了一个测试脚本    
@@ -244,4 +246,10 @@ saveCsv list list.csv
 //第二个参数为存储值的key，值可以为对象也可以为数组。
 //第三个参数为保存的文件名，文件名暂不支持变量
 saveJson obj obj.json
+```
+### 17.截图
+```js
+//第二个参数为要截图的元素
+//第三个参数为保存的文件路径,图片格式应为png
+screenshot body 1.png
 ```
