@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
     <description>基于selenium-java的自定义脚本语言工具类</description>
     <licenses>
         <license>
@@ -101,7 +101,28 @@
             <artifactId>selenium-java</artifactId>
             <version>4.0.0-beta-3</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.lowagie.text</groupId>
+            <artifactId>com.springsource.com.lowagie.text</artifactId>
+            <version>2.0.8</version>
+        </dependency>
 
     </dependencies>
+    <repositories>
+        <repository>
+            <id>aliyun</id>
+            <name>aliyun</name>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>Central</id>
+            <name>Central</name>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>Spring Plugins</id>
+            <name>Spring Plugins</name>
+            <url>https://repo.spring.io/plugins-release/</url>
+        </repository>
+    </repositories>
 </project>

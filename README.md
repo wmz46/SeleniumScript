@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -250,6 +250,6 @@ saveJson obj obj.json
 ### 17.截图
 ```js
 //第二个参数为要截图的元素
-//第三个参数为保存的文件路径,图片格式应为png
+//第三个参数为保存的文件路径,图片格式应为png，也可保存为pdf
 screenshot body 1.png
 ```

@@ -1,5 +1,8 @@
 package com.iceolive.selenium;
 
+import com.lowagie.text.BadElementException;
+import com.lowagie.text.Document;
+import com.lowagie.text.pdf.PdfWriter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -16,6 +19,11 @@ import java.util.*;
 import java.util.function.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Image;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.PdfStamper;
 
 
 /**
@@ -80,14 +88,29 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             Rectangle rect = element1.getRect();
                             //从元素左上角坐标开始，按照元素的高宽对img进行裁剪为符合需要的图片
                             BufferedImage dest = img.getSubimage(rect.x, rect.y, rect.width, rect.height);
-                            ImageIO.write(dest, "png", new File(value));
+                            if(value.endsWith(".pdf")){
+                                com.lowagie.text.Rectangle  rect2 = new com.lowagie.text.Rectangle(rect.x,rect.y,rect.width,rect.height);
+                                Document document = new Document(rect2,0,0,0,0);
+                                FileOutputStream fos = new FileOutputStream(new File(value));
+                                PdfWriter.getInstance(document,fos);
+                                document.open();
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                ImageIO.write(dest,"png",baos);
+                                Image image =Image.getInstance(baos.toByteArray());
+                                document.add(image);
+                                document.close();
+                            }else {
+                                ImageIO.write(dest, "png", new File(value));
+                            }
 
                             webDriver.manage().window().setSize(originalSize);
                         }else{
                             System.err.println("元素不可见，无法截图："+item.toString());
                         }
 
-                    } catch (IOException e) {
+                    } catch (IOException | BadElementException e) {
+                        e.printStackTrace();
+                    } catch (DocumentException e) {
                         e.printStackTrace();
                     }
                     break;
