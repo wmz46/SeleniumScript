@@ -217,6 +217,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
                         } else if ("url".equals(value)) {
                             wait.until(ExpectedConditions.urlMatches(target));
+                        }else if("invisible".equals(value)) {
+                            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(target)));
                         }
                         if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
                             run(item.getThenCommands());
@@ -233,6 +235,10 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "saveCsv":
                     download(target, value, "csv");
+                    break;
+                case  "log":
+                    //输出日志
+                    System.out.println(new Date().toString()+"    "+target);
                     break;
                 default:
                     break;
