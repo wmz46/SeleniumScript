@@ -240,6 +240,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     //输出日志
                     System.out.println(new Date().toString()+"    "+target);
                     break;
+                case "stop":
+                    //终止
+                    return;
                 default:
                     break;
             }
