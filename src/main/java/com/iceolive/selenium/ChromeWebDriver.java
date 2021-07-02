@@ -2,28 +2,39 @@ package com.iceolive.selenium;
 
 import com.lowagie.text.BadElementException;
 import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Image;
 import com.lowagie.text.pdf.PdfWriter;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.client.ClientUtil;
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.proxy.CaptureType;
+import net.lightbody.bmp.util.HttpMessageContents;
+import net.lightbody.bmp.util.HttpMessageInfo;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.interactions.*;
-import org.openqa.selenium.support.events.EventFiringWebDriver;
-import org.openqa.selenium.support.events.WebDriverEventListener;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.interactions.Interactive;
+import org.openqa.selenium.interactions.Sequence;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.MessageFormat;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Image;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.PdfStamper;
 
 
 /**
@@ -35,12 +46,30 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     private Map<String, Object> variableMap = new HashMap<>();
 
+    BrowserMobProxy proxy;
+
     public ChromeWebDriver(String path) {
         File chromeDriverPath = new File(path);
         System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         webDriver = new ChromeDriver(chromeOptions);
+    }
+
+    public ChromeWebDriver(String path, BrowserMobProxy browserMobProxy) {
+        this.proxy = browserMobProxy;
+        proxy.enableHarCaptureTypes(CaptureType.REQUEST_HEADERS, CaptureType.REQUEST_CONTENT, CaptureType.REQUEST_BINARY_CONTENT, CaptureType.REQUEST_COOKIES, CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT, CaptureType.RESPONSE_BINARY_CONTENT, CaptureType.RESPONSE_COOKIES);
+        Proxy seleniumProxy = ClientUtil.createSeleniumProxy(browserMobProxy);
+        File chromeDriverPath = new File(path);
+        System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.setProxy(seleniumProxy);
+        chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+        chromeOptions.addArguments("ignore-certificate-errors");
+        chromeOptions.addArguments("ignore-urlfetcher-cert-requests");
+        webDriver = new ChromeDriver(chromeOptions);
+
+
     }
 
     /**
@@ -71,14 +100,16 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String value = replaceVariable(item.getValue());
             Integer timeout = Integer.parseInt(replaceVariable(item.getTimeout()));
             String statement = item.getStatement();
+            System.err.println(new Date().toString() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
+
             switch (command) {
 
                 case "screenshot":
                     try {
                         WebElement element1 = webDriver.findElement(By.cssSelector(target));
-                        if(element1.isDisplayed()) {
-                            Long fullWidth = (long)webDriver.executeScript("return document.documentElement.scrollWidth");
-                            Long fullHeight =(long) webDriver.executeScript("return document.documentElement.scrollHeight");
+                        if (element1.isDisplayed()) {
+                            Long fullWidth = (long) webDriver.executeScript("return document.documentElement.scrollWidth");
+                            Long fullHeight = (long) webDriver.executeScript("return document.documentElement.scrollHeight");
                             Dimension dimension = new Dimension(fullWidth.intValue(), fullHeight.intValue());
                             Dimension originalSize = webDriver.manage().window().getSize();
                             webDriver.manage().window().setSize(dimension);
@@ -88,24 +119,24 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             Rectangle rect = element1.getRect();
                             //从元素左上角坐标开始，按照元素的高宽对img进行裁剪为符合需要的图片
                             BufferedImage dest = img.getSubimage(rect.x, rect.y, rect.width, rect.height);
-                            if(value.endsWith(".pdf")){
-                                com.lowagie.text.Rectangle  rect2 = new com.lowagie.text.Rectangle(rect.x,rect.y,rect.width,rect.height);
-                                Document document = new Document(rect2,0,0,0,0);
+                            if (value.endsWith(".pdf")) {
+                                com.lowagie.text.Rectangle rect2 = new com.lowagie.text.Rectangle(rect.x, rect.y, rect.width, rect.height);
+                                Document document = new Document(rect2, 0, 0, 0, 0);
                                 FileOutputStream fos = new FileOutputStream(new File(value));
-                                PdfWriter.getInstance(document,fos);
+                                PdfWriter.getInstance(document, fos);
                                 document.open();
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ImageIO.write(dest,"png",baos);
-                                Image image =Image.getInstance(baos.toByteArray());
+                                ImageIO.write(dest, "png", baos);
+                                Image image = Image.getInstance(baos.toByteArray());
                                 document.add(image);
                                 document.close();
-                            }else {
+                            } else {
                                 ImageIO.write(dest, "png", new File(value));
                             }
 
                             webDriver.manage().window().setSize(originalSize);
-                        }else{
-                            System.err.println("元素不可见，无法截图："+item.toString());
+                        } else {
+                            System.err.println("元素不可见，无法截图：" + item.toString());
                         }
 
                     } catch (IOException | BadElementException e) {
@@ -119,6 +150,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (value != null) {
                         obj = value;
                     } else {
+                        statement = "var _$map = arguments[0];" + statement;
                         obj = webDriver.executeScript(statement, variableMap);
                     }
                     variableMap.put(target, obj);
@@ -127,6 +159,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     this.alert(target);
                     break;
                 case "exec":
+                    statement = "var _$map = arguments[0];" + statement;
                     webDriver.executeScript(statement, variableMap);
                     break;
                 case "scroll":
@@ -173,7 +206,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         int count = Integer.parseInt(target);
                         while (count > 0) {
                             if (item.getStatement() != null) {
-                                if (!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)) {
+                                String statement1 = "var _$map = arguments[0];" + item.getStatement();
+                                if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
                                     break;
                                 }
                             }
@@ -185,7 +219,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     } else {
                         while (true) {
                             if (item.getStatement() != null) {
-                                if (!(Boolean) webDriver.executeScript(item.getStatement(), variableMap)) {
+                                String statement1 = "var _$map = arguments[0];" + item.getStatement();
+                                if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
                                     break;
                                 }
                             } else {
@@ -200,6 +235,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
                     break;
                 case "when":
+                    statement = "var _$map = arguments[0];" + statement;
                     if ((Boolean) webDriver.executeScript(statement, variableMap)) {
                         if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
                             run(item.getThenCommands());
@@ -217,7 +253,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
                         } else if ("url".equals(value)) {
                             wait.until(ExpectedConditions.urlMatches(target));
-                        }else if("invisible".equals(value)) {
+                        } else if ("invisible".equals(value)) {
                             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(target)));
                         }
                         if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
@@ -236,13 +272,54 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "saveCsv":
                     download(target, value, "csv");
                     break;
-                case  "log":
+                case "log":
                     //输出日志
-                    System.out.println(new Date().toString()+"    "+target);
+                    System.out.println(new Date().toString() + "     " + target);
                     break;
                 case "stop":
                     //终止
                     return;
+                case "keydown":
+
+                    Actions actions = new Actions(webDriver);
+                    switch(target.toLowerCase()){
+                        case "end":
+                            actions.sendKeys(Keys.END).perform();
+                            break;
+                        case "home":
+                            actions.sendKeys(Keys.HOME).perform();
+                            break;
+                        case "f5":
+                            actions.sendKeys(Keys.F5).perform();
+                            break;
+                    }
+                    break;
+                case "newHar":
+                    if (this.proxy != null) {
+                        proxy.newHar();
+
+                    }
+                    break;
+                case "endHar":
+                    if (this.proxy != null && target != null) {
+                        Har har = proxy.endHar();
+                        List requests = new ArrayList();
+                        for (HarEntry entry : har.getLog().getEntries()) {
+                            String method = entry.getRequest().getMethod();
+                            if (method.equals("OPTIONS")) {
+                                continue;
+                            }
+                            String url = entry.getRequest().getUrl();
+                            String content = entry.getResponse().getContent().getText();
+                            Map<String, String> map = new HashMap<>();
+                            map.put("url", url);
+                            map.put("method", method);
+                            map.put("content", content);
+                            requests.add(map);
+                        }
+                        variableMap.put(target, requests);
+                    }
+                    break;
                 default:
                     break;
             }

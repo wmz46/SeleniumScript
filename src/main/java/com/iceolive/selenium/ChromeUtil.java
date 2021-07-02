@@ -1,9 +1,12 @@
 package com.iceolive.selenium;
 
 
+import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.BrowserMobProxyServer;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 /**
  * @author wangmianzhe
@@ -25,21 +28,26 @@ public class ChromeUtil {
 
     public static void main(String[] args) {
         String script = "";
-        String driver =System.getProperty("user.dir") + "\\chromedriver.exe";
+        String driver = System.getProperty("user.dir") + "\\chromedriver.exe";
         for (int i = 0; args != null && i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-s")) {
                 script = args[++i];
             } else if (arg.equals("-script")) {
                 script = args[++i];
-            }else if(arg.equals("-driver")){
+            } else if (arg.equals("-driver")) {
                 driver = args[++i];
 
             }
         }
-        ChromeWebDriver webDriver = new ChromeWebDriver(driver);
-        webDriver.addWebDriverCloseEvent(()->{
-           webDriver.quit();
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        InetSocketAddress address = new InetSocketAddress("127.0.0.1",25378);
+        proxy.setChainedProxy(address);
+        proxy.start(0);
+        ChromeWebDriver webDriver = new ChromeWebDriver(driver,proxy);
+        webDriver.addWebDriverCloseEvent(() -> {
+            proxy.stop();
+            webDriver.quit();
         });
         try {
             webDriver.runFromFile(script);

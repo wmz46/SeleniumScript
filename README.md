@@ -154,12 +154,12 @@ set a
 //第二个参数为等待的秒数,这里可以为小数，如0.5表示等待0.5秒
 sleep 2
 ```
-### 12.等待并执行操作（目前只支持两种等待）
+### 12.等待并执行操作（目前只支持三种等待）
 该指令不一定需要带then和else操作。
 ```js
 //等待元素可见
 //第二个参数为css选择器，同document.querySelector
-//第三个参数固定visible
+//第三个参数固定为visible 
 //第四个参数为超时的秒数，必须为整数秒
 wait '#username' visible 3
 //then里面的指令为元素出现后才执行的操作
@@ -168,7 +168,20 @@ then
 //else里面的指令为超时元素还未出现时才执行的操作
 else
   click '#btn2'
-end
+end 
+
+//等待元素可见
+//第二个参数为css选择器，同document.querySelector
+//第三个参数固定为invisible 
+//第四个参数为超时的秒数，必须为整数秒
+wait '#username' invisible 3
+//then里面的指令为元素不可见后才执行的操作
+then
+  click '#btn'
+//else里面的指令为超时元素还未出现时才执行的操作
+else
+  click '#btn2'
+end 
 
 //等待url跳转到指定网页
 //第二个参数为url地址，可以为正则表达式
@@ -252,4 +265,14 @@ saveJson obj obj.json
 //第二个参数为要截图的元素
 //第三个参数为保存的文件路径,图片格式应为png，也可保存为pdf
 screenshot body 1.png
+```
+### 18.日志
+```js
+//第二个参数为日志内容
+log '程序启动'
+```
+### 19.停止
+```js
+//不继续执行，只对当前代码块生效。外层代码不会停止
+stop
 ```
