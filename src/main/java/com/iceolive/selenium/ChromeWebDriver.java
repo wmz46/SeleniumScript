@@ -95,11 +95,11 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     }
 
     private void run(List<SeleniumCmd> list) {
-        if(stop){
+        if (stop) {
             return;
         }
         for (int i = 0; i < list.size(); i++) {
-            if(stop){
+            if (stop) {
                 return;
             }
             SeleniumCmd item = list.get(i);
@@ -291,7 +291,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "keydown":
 
                     Actions actions = new Actions(webDriver);
-                    switch(target.toLowerCase()){
+                    switch (target.toLowerCase()) {
                         case "end":
                             actions.sendKeys(Keys.END).perform();
                             break;
@@ -575,7 +575,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 bufferedReader.close();
                 inputStreamReader.close();
             } else {
-                throw new RuntimeException("文件[" + path + "]不存在");
+                throw new RuntimeException("脚本文件[" + path + "]不存在");
 
             }
         } catch (IOException e) {

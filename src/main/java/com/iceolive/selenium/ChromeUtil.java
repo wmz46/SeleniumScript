@@ -3,11 +3,9 @@ package com.iceolive.selenium;
 
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
-import okhttp3.*;
-import okio.BufferedSink;
-import okio.Okio;
-import okio.Sink;
-import org.openqa.selenium.chrome.ChromeDriver;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,14 +39,15 @@ public class ChromeUtil {
         return version;
     }
 
-    public static void unzip(File file,String destDirPath) throws IOException {
-        ZipFile zipFile =  new ZipFile(file);
+    public static void unzip(File file, String destDirPath) throws IOException {
+
+        System.out.println("开始解压文件...");
+        ZipFile zipFile = new ZipFile(file);
         Enumeration<?> entries = zipFile.entries();
 
         while (entries.hasMoreElements()) {
             ZipEntry entry = (ZipEntry) entries.nextElement();
 
-            System.out.println("解压" + entry.getName());
 
             // 如果是文件夹，就创建个文件夹
 
@@ -66,7 +65,7 @@ public class ChromeUtil {
 
                 // 保证这个文件的父文件夹必须要存在
 
-                if(!targetFile.getParentFile().exists()){
+                if (!targetFile.getParentFile().exists()) {
                     targetFile.getParentFile().mkdirs();
 
                 }
@@ -98,8 +97,13 @@ public class ChromeUtil {
 
         }
     }
+
     private static void downloadAndUnzip() throws IOException {
-        String version = getVersion().split("\\.")[0];
+        String version = getVersion();
+        if (version == null) {
+            System.out.println("请先安装chrome浏览器");
+        }
+        version = version.split("\\.")[0];
         String url = "https://npm.taobao.org/mirrors/chromedriver/LATEST_RELEASE_" + version;
         Request request = new Request.Builder()
                 .url(url)
@@ -108,12 +112,13 @@ public class ChromeUtil {
         Response response = client.newCall(request).execute();
         String fullVersion = response.body().string();
         String downloadUrl = "https://npm.taobao.org/mirrors/chromedriver/" + fullVersion + "/chromedriver_win32.zip";
+        System.out.println("开始下载chromedriver...");
         request = new Request.Builder().url(downloadUrl).build();
         response = client.newCall(request).execute();
         InputStream is;
         is = response.body().byteStream();
-        FileOutputStream fos=null;
-        String downloadPath = System.getProperty("user.dir") +"\\chromedriver_win32.zip";
+        FileOutputStream fos = null;
+        String downloadPath = System.getProperty("user.dir") + "\\chromedriver_win32.zip";
         fos = new FileOutputStream(downloadPath);
         int len;
         byte[] bytes = new byte[4096];
@@ -123,9 +128,11 @@ public class ChromeUtil {
         fos.flush();
         is.close();
         fos.close();
-        unzip(new File(downloadPath),System.getProperty("user.dir"));
+
+        unzip(new File(downloadPath), System.getProperty("user.dir"));
 
     }
+
     public static void main(String[] args) throws IOException {
         String script = "";
         String driver = System.getProperty("user.dir") + "\\chromedriver.exe";
@@ -147,21 +154,38 @@ public class ChromeUtil {
         }
         String finalProxy = proxy;
         BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
-        ChromeWebDriver webDriver;
         if (proxy != null) {
             InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
             browserMobProxy.setChainedProxy(address);
             browserMobProxy.start(0);
 
-            webDriver = new ChromeWebDriver(driver, browserMobProxy);
-        } else {
-            webDriver = new ChromeWebDriver(driver);
         }
+        ChromeWebDriver webDriver;
+        try {
+            if (proxy != null) {
+                webDriver = new ChromeWebDriver(driver, browserMobProxy);
+            } else {
+                webDriver = new ChromeWebDriver(driver);
+            }
+        } catch (Exception e) {
+            if (e.getMessage().contains("only supports Chrome version")) {
+                System.out.println("chromedriver版本不匹配！");
+                downloadAndUnzip();
+                if (proxy != null) {
+                    webDriver = new ChromeWebDriver(driver, browserMobProxy);
+                } else {
+                    webDriver = new ChromeWebDriver(driver);
+                }
+            } else {
+                throw e;
+            }
+        }
+        ChromeWebDriver finalWebDriver = webDriver;
         webDriver.addWebDriverCloseEvent(() -> {
             if (finalProxy != null) {
                 browserMobProxy.stop();
             }
-            webDriver.quit();
+            finalWebDriver.quit();
         });
         try {
             webDriver.runFromFile(script);
