@@ -3,16 +3,26 @@ package com.iceolive.selenium;
 
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
+import okhttp3.*;
+import okio.BufferedSink;
+import okio.Okio;
+import okio.Sink;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * @author wangmianzhe
  */
 public class ChromeUtil {
-
+    private static OkHttpClient client = new OkHttpClient();
 
     /**
      * 关闭所有chromedriver进程
@@ -26,9 +36,103 @@ public class ChromeUtil {
 
     }
 
-    public static void main(String[] args) {
+    public static String getVersion() {
+        String version = RegUtil.getValue("\"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome\"", "DisplayVersion");
+        return version;
+    }
+
+    public static void unzip(File file,String destDirPath) throws IOException {
+        ZipFile zipFile =  new ZipFile(file);
+        Enumeration<?> entries = zipFile.entries();
+
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = (ZipEntry) entries.nextElement();
+
+            System.out.println("解压" + entry.getName());
+
+            // 如果是文件夹，就创建个文件夹
+
+            if (entry.isDirectory()) {
+                String dirPath = destDirPath + "/" + entry.getName();
+
+                File dir = new File(dirPath);
+
+                dir.mkdirs();
+
+            } else {
+                // 如果是文件，就先创建一个文件，然后用io流把内容copy过去
+
+                File targetFile = new File(destDirPath + "/" + entry.getName());
+
+                // 保证这个文件的父文件夹必须要存在
+
+                if(!targetFile.getParentFile().exists()){
+                    targetFile.getParentFile().mkdirs();
+
+                }
+
+                targetFile.createNewFile();
+
+                // 将压缩文件内容写入到这个文件中
+
+                InputStream is = zipFile.getInputStream(entry);
+
+                FileOutputStream fos = new FileOutputStream(targetFile);
+
+                int len;
+
+                byte[] buf = new byte[1024];
+
+                while ((len = is.read(buf)) != -1) {
+                    fos.write(buf, 0, len);
+
+                }
+
+                // 关流顺序，先打开的后关闭
+
+                fos.close();
+
+                is.close();
+
+            }
+
+        }
+    }
+    private static void downloadAndUnzip() throws IOException {
+        String version = getVersion().split("\\.")[0];
+        String url = "https://npm.taobao.org/mirrors/chromedriver/LATEST_RELEASE_" + version;
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        Response response = client.newCall(request).execute();
+        String fullVersion = response.body().string();
+        String downloadUrl = "https://npm.taobao.org/mirrors/chromedriver/" + fullVersion + "/chromedriver_win32.zip";
+        request = new Request.Builder().url(downloadUrl).build();
+        response = client.newCall(request).execute();
+        InputStream is;
+        is = response.body().byteStream();
+        FileOutputStream fos=null;
+        String downloadPath = System.getProperty("user.dir") +"\\chromedriver_win32.zip";
+        fos = new FileOutputStream(downloadPath);
+        int len;
+        byte[] bytes = new byte[4096];
+        while ((len = is.read(bytes)) != -1) {
+            fos.write(bytes, 0, len);
+        }
+        fos.flush();
+        is.close();
+        fos.close();
+        unzip(new File(downloadPath),System.getProperty("user.dir"));
+
+    }
+    public static void main(String[] args) throws IOException {
         String script = "";
         String driver = System.getProperty("user.dir") + "\\chromedriver.exe";
+        if (!new File(driver).exists()) {
+            downloadAndUnzip();
+        }
+        String proxy = null;
         for (int i = 0; args != null && i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-s")) {
@@ -37,16 +141,26 @@ public class ChromeUtil {
                 script = args[++i];
             } else if (arg.equals("-driver")) {
                 driver = args[++i];
-
+            } else if (arg.equals("-proxy")) {
+                proxy = args[++i];
             }
         }
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1",25378);
-        proxy.setChainedProxy(address);
-        proxy.start(0);
-        ChromeWebDriver webDriver = new ChromeWebDriver(driver,proxy);
+        String finalProxy = proxy;
+        BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
+        ChromeWebDriver webDriver;
+        if (proxy != null) {
+            InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
+            browserMobProxy.setChainedProxy(address);
+            browserMobProxy.start(0);
+
+            webDriver = new ChromeWebDriver(driver, browserMobProxy);
+        } else {
+            webDriver = new ChromeWebDriver(driver);
+        }
         webDriver.addWebDriverCloseEvent(() -> {
-            proxy.stop();
+            if (finalProxy != null) {
+                browserMobProxy.stop();
+            }
             webDriver.quit();
         });
         try {

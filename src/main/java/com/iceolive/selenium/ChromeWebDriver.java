@@ -48,6 +48,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     BrowserMobProxy proxy;
 
+    boolean stop = false;
+
     public ChromeWebDriver(String path) {
         File chromeDriverPath = new File(path);
         System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
@@ -93,7 +95,13 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     }
 
     private void run(List<SeleniumCmd> list) {
+        if(stop){
+            return;
+        }
         for (int i = 0; i < list.size(); i++) {
+            if(stop){
+                return;
+            }
             SeleniumCmd item = list.get(i);
             String command = item.getCommand();
             String target = replaceVariable(item.getTarget());
@@ -153,6 +161,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         statement = "var _$map = arguments[0];" + statement;
                         obj = webDriver.executeScript(statement, variableMap);
                     }
+                    System.err.println(obj);
                     variableMap.put(target, obj);
                     break;
                 case "alert":
@@ -278,7 +287,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "stop":
                     //终止
-                    return;
+                    stop = true;
                 case "keydown":
 
                     Actions actions = new Actions(webDriver);
@@ -292,6 +301,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         case "f5":
                             actions.sendKeys(Keys.F5).perform();
                             break;
+                        case "f12":
+                            actions.sendKeys(Keys.F12).perform();
+                            break;
                     }
                     break;
                 case "newHar":
@@ -303,7 +315,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "endHar":
                     if (this.proxy != null && target != null) {
                         Har har = proxy.endHar();
-                        List requests = new ArrayList();
+                        List<Map<String, String>> requests = new ArrayList();
                         for (HarEntry entry : har.getLog().getEntries()) {
                             String method = entry.getRequest().getMethod();
                             if (method.equals("OPTIONS")) {
@@ -319,6 +331,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         }
                         variableMap.put(target, requests);
                     }
+                    break;
+                case "maximize":
+                    webDriver.manage().window().maximize();
                     break;
                 default:
                     break;
