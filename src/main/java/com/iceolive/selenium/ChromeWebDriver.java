@@ -301,9 +301,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         case "f5":
                             actions.sendKeys(Keys.F5).perform();
                             break;
-                        case "f12":
-                            actions.sendKeys(Keys.F12).perform();
-                            break;
                     }
                     break;
                 case "newHar":

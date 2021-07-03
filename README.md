@@ -273,6 +273,29 @@ log '程序启动'
 ```
 ### 19.停止
 ```js
-//不继续执行，只对当前代码块生效。外层代码不会停止
+//不继续执行
 stop
+```
+### 20.模拟按键
+```js
+//目前支持 f5,home,end
+keydown f5
+//一般用来触发下拉翻页
+keydown end
+keydown home
+```
+### 21.newHar
+```js
+//需写在open前，用于获取请求日志，只有当启动BrowserMobProxy代理才生效
+newHar
+```
+
+### 20.endHar
+```js
+//需写在open后，获取请求日志，并赋值到logs中。格式[{url:'xxx',method:'get',content:'xxx'},...]
+endHar logs
+```
+### 21.最大化
+```js
+maximize
 ```
