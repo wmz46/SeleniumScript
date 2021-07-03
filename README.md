@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -72,8 +72,7 @@ java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
 java -jar SeleniumScript.jar -script "D://你的测试脚本.txt" -driver "D://chromedriver.exe"
 ```
 ## 三、目录说明
-- tests目录为测试脚本目录，里面附带了一个测试脚本    
-- webdriver为驱动程序目录，当前驱动为88.0.4324.96   
+- tests目录为测试脚本目录，里面附带了一个测试脚本       
 ## 四、开发背景
 selenium是个强大的自动化测试工具，但是我还是想让它和js脚本语言一样，支持解释执行。并且我希望它的语法还能更简单一些。    
 为了支持我在运行时修改脚本，无需重新编译，并且减少代码的编写量，所以开发了这样看起来有点蹩脚的脚本语言。
@@ -298,4 +297,9 @@ endHar logs
 ### 21.最大化
 ```js
 maximize
+```
+### 22.读取excel
+```js
+//读取excel数据，并赋值到list,对象数组，对象所有字段类型均为字符串，excel首行为标题行
+loadExcel 'D://1.xlsx' list
 ```

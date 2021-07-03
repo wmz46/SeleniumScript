@@ -1,21 +1,16 @@
 package com.iceolive.selenium;
 
+import com.iceolive.util.ExcelUtil;
 import com.lowagie.text.BadElementException;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
 import com.lowagie.text.pdf.PdfWriter;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.client.ClientUtil;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.filters.RequestFilter;
-import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.proxy.CaptureType;
-import net.lightbody.bmp.util.HttpMessageContents;
-import net.lightbody.bmp.util.HttpMessageInfo;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -288,8 +283,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "stop":
                     //终止
                     stop = true;
+                    break;
                 case "keydown":
-
                     Actions actions = new Actions(webDriver);
                     switch (target.toLowerCase()) {
                         case "end":
@@ -306,7 +301,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "newHar":
                     if (this.proxy != null) {
                         proxy.newHar();
-
                     }
                     break;
                 case "endHar":
@@ -331,6 +325,11 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "maximize":
                     webDriver.manage().window().maximize();
+                    break;
+                case "loadExcel":
+                    List<Map<String, String>> mapList = ExcelUtil.excel2List(target);
+                    System.err.println(mapList);
+                    variableMap.put(value,mapList);
                     break;
                 default:
                     break;
