@@ -22,6 +22,9 @@ import java.util.zip.ZipFile;
 public class ChromeUtil {
     private static OkHttpClient client = new OkHttpClient();
 
+    private final static String chromeDriverDomain = "http://chromedriver.storage.googleapis.com";
+    private final static String chromeDriverDomain2 = "https://npm.taobao.org/mirrors/chromedriver";
+
     /**
      * 关闭所有chromedriver进程
      */
@@ -99,19 +102,33 @@ public class ChromeUtil {
     }
 
     private static void downloadAndUnzip() throws IOException {
+        String domain = chromeDriverDomain2;
         String version = getVersion();
         if (version == null) {
             System.out.println("请先安装chrome浏览器");
         }
         version = version.split("\\.")[0];
-        String url = "https://npm.taobao.org/mirrors/chromedriver/LATEST_RELEASE_" + version;
-        Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-        Response response = client.newCall(request).execute();
+        Request request;
+        Response response;
+        try {
+            String url = domain + "/LATEST_RELEASE_" + version;
+            request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+            response = client.newCall(request).execute();
+        }catch (Exception e){
+            domain = chromeDriverDomain;
+            String url = domain + "/LATEST_RELEASE_" + version;
+            request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+            response = client.newCall(request).execute();
+
+        }
         String fullVersion = response.body().string();
-        String downloadUrl = "https://npm.taobao.org/mirrors/chromedriver/" + fullVersion + "/chromedriver_win32.zip";
+        String downloadUrl = domain+"/" + fullVersion + "/chromedriver_win32.zip";
         System.out.println("开始下载chromedriver...");
         request = new Request.Builder().url(downloadUrl).build();
         response = client.newCall(request).execute();
