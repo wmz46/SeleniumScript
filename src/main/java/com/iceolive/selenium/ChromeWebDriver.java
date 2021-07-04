@@ -329,7 +329,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "loadExcel":
                     List<Map<String, String>> mapList = ExcelUtil.excel2List(target);
                     System.err.println(mapList);
-                    variableMap.put(value,mapList);
+                    variableMap.put(value, mapList);
                     break;
                 default:
                     break;
@@ -555,34 +555,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
      * @param charset 文件编码
      */
     public void runFromFile(String path, String charset) {
-
-        StringBuffer sb = new StringBuffer();
-        InputStreamReader inputStreamReader = null;
-        BufferedReader bufferedReader = null;
-        try {
-            File file = new File(path);
-            if (file.isFile() && file.exists()) {
-                inputStreamReader = new InputStreamReader(new FileInputStream(file), charset);
-                bufferedReader = new BufferedReader(inputStreamReader);
-                String txt = null;
-                while ((txt = bufferedReader.readLine()) != null) {
-                    sb.append(txt + "\n");
-                }
-                bufferedReader.close();
-                inputStreamReader.close();
-            } else {
-                throw new RuntimeException("脚本文件[" + path + "]不存在");
-
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                inputStreamReader.close();
-            } catch (Exception e) {
-            }
-        }
-        run(sb.toString());
+        String s = FileUtil.readFromFile(path, charset);
+        run(s);
     }
 
     /**

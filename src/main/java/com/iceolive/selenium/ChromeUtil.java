@@ -7,10 +7,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -117,7 +114,7 @@ public class ChromeUtil {
                     .get()
                     .build();
             response = client.newCall(request).execute();
-        }catch (Exception e){
+        } catch (Exception e) {
             domain = chromeDriverDomain;
             String url = domain + "/LATEST_RELEASE_" + version;
             request = new Request.Builder()
@@ -128,7 +125,7 @@ public class ChromeUtil {
 
         }
         String fullVersion = response.body().string();
-        String downloadUrl = domain+"/" + fullVersion + "/chromedriver_win32.zip";
+        String downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
         System.out.println("开始下载chromedriver...");
         request = new Request.Builder().url(downloadUrl).build();
         response = client.newCall(request).execute();
@@ -157,6 +154,8 @@ public class ChromeUtil {
             downloadAndUnzip();
         }
         String proxy = null;
+        boolean isServer = false;
+        int port = 10042;
         for (int i = 0; args != null && i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-s")) {
@@ -167,8 +166,22 @@ public class ChromeUtil {
                 driver = args[++i];
             } else if (arg.equals("-proxy")) {
                 proxy = args[++i];
+            } else if (arg.equals("-ws")) {
+                isServer = true;
+            } else if (arg.equals("-p")) {
+                port = Integer.parseInt(args[++i]);
             }
         }
+        if (isServer) {
+            ChromeServer chromeServer = new ChromeServer(port);
+            chromeServer.start();
+        } else {
+            String s = FileUtil.readFromFile(script,"utf-8");
+            runScript(s, driver,  proxy);
+        }
+    }
+
+    public static void runScript(String script, String driver, String proxy) throws IOException {
         String finalProxy = proxy;
         BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
         if (proxy != null) {
@@ -205,7 +218,7 @@ public class ChromeUtil {
             finalWebDriver.quit();
         });
         try {
-            webDriver.runFromFile(script);
+            webDriver.run(script);
             //打印所有的变量
             System.out.println(webDriver.getVariableMap());
             System.out.println("执行完毕");
