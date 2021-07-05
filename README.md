@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.0.8</version>
+    <version>0.0.9</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -61,7 +61,7 @@ end
 ## 二、可执行jar包
 releases提供了一个可执行jar包的下载，也可通过clone本项目，通过mvn package自行打包。
 ### 使用方法
-下载SeleniumScript.jar后，将chromedriver.exe放到同级目录下，命令行执行    
+下载SeleniumScript.jar后，命令行执行    
 注意：脚本文件编码请使用utf-8，否则中文将会乱码          
 ```cmd
 :: 脚本后缀不必是txt，这里只是举个例子
@@ -70,7 +70,10 @@ java -jar SeleniumScript.jar -s "D://你的测试脚本.txt"
 java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
 :: 指定驱动路径
 java -jar SeleniumScript.jar -script "D://你的测试脚本.txt" -driver "D://chromedriver.exe"
+:: 以websocket服务启动,当需执行脚本非本地文件存储时使用。
+java -jar SeleniumScript.jar -ws
 ```
+
 ## 三、目录说明
 - tests目录为测试脚本目录，里面附带了一个测试脚本       
 ## 四、开发背景
