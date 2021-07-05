@@ -348,6 +348,12 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         System.out.println("prompt超时");
                     }
                     break;
+                case "resize":
+                    String[] split = target.split(",");
+                    int w = Integer.parseInt(split[0]);
+                    int h = Integer.parseInt(split[1]);
+                    webDriver.manage().window().setSize(new Dimension(w,h));
+                    break;
                 default:
                     break;
             }
