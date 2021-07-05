@@ -306,3 +306,15 @@ maximize
 //读取excel数据，并赋值到list,对象数组，对象所有字段类型均为字符串，excel首行为标题行
 loadExcel 'D://1.xlsx' list
 ```
+### 23.prompt
+else 为超时时的操作。
+该指令不一定需要带then和else操作。
+```js
+//弹窗输入框，用户输入后，点击确定，将输入值赋给变量a，等待超时时间60秒 
+prompt a 请输入网址 60
+then
+    alert hello
+else
+    alert timeout
+end
+```

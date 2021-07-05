@@ -45,6 +45,8 @@ public class SeleniumCmd {
         return "when".equals(this.command);
     }
 
+    public boolean isPromptCmd(){return "prompt".equals(this.command);}
+
     public SeleniumCmd(String line) {
         this.line = line;
         if (Pattern.matches("^\\s*//.*?", line)) {

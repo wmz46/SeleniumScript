@@ -331,6 +331,23 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     System.err.println(mapList);
                     variableMap.put(value, mapList);
                     break;
+                case "prompt":
+                    this.prompt(value);
+                    try {
+                        WebDriverWait wait = new WebDriverWait(webDriver, timeout, 100);
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
+                        String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
+                        variableMap.put(target, text);
+                        if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
+                            run(item.getThenCommands());
+                        }
+                    } catch (TimeoutException e) {
+                        if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
+                            run(item.getElseCommands());
+                        }
+                        System.out.println("prompt超时");
+                    }
+                    break;
                 default:
                     break;
             }
@@ -361,7 +378,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
             SeleniumCmd seleniumCmd = new SeleniumCmd(line);
-            if (seleniumCmd.isWaitCmd()) {
+            if (seleniumCmd.isWaitCmd() || seleniumCmd.isPromptCmd()) {
                 if (i + 1 < lines.length && "then".equals(lines[i + 1].trim())) {
                     //如果wait下一行是then，则需要设置then和else
                     int thenCount = 0;
@@ -402,6 +419,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     }
                     list.add(seleniumCmd);
                     i = endLineNum;
+                }else{
+                    list.add(seleniumCmd);
                 }
             } else if (seleniumCmd.isWhenCmd()) {
                 if (i + 1 < lines.length && "<script>".equals(lines[i + 1].trim())) {
@@ -741,12 +760,64 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         sb.append("  div.appendChild(closeBtn);\n");
 
         sb.append("  var closeBtn2 = document.createElement('button');\n");
-        sb.append("  closeBtn2.setAttribute('style','color:#fff;background-color:#FF9933;cursor:pointer;border:none;height:30px;width:50px;bottom:5px;right:5px;right:5px;position:absolute;');\n");
+        sb.append("  closeBtn2.setAttribute('style','color:#fff;background-color:#FF9933;cursor:pointer;border:none;height:30px;width:50px;bottom:5px;right:5px;position:absolute;');\n");
         sb.append("  closeBtn2.innerText = '关闭';\n");
         sb.append("  closeBtn2.onclick=function(){\n");
         sb.append("    document.body.removeChild(div);\n");
         sb.append("  };\n");
         sb.append("  div.appendChild(closeBtn2);\n");
+
+        sb.append("  document.body.appendChild(div);\n");
+        sb.append("})()");
+
+        webDriver.executeScript(sb.toString());
+    }
+
+    public void prompt(String msg) {
+        if (msg == null) {
+            msg = "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("(function(){\n");
+        sb.append("  var div = document.querySelector('__prompt__');\n");
+        sb.append("  if(div){\n");
+        sb.append("    document.body.removeChild(div);\n");
+        sb.append("  };\n");
+        sb.append("  div = document.createElement('div');\n");
+        sb.append("  div.setAttribute('id','__prompt__');\n");
+        sb.append("  div.setAttribute('style','position: fixed;z-index:999999;font-size:16px;left:calc(50% - 200px);color:#fff;width:400px;top:calc(50% - 100px);height:200px;background-color:lightpink;text-align:center;');\n");
+
+        sb.append("  var content = document.createElement('p');\n");
+        sb.append("  content.setAttribute('style','margin-top:50px;');\n");
+        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'") + "';\n");
+        sb.append("  var input = document.createElement('input');\n");
+        sb.append("  input.style.width='80%';\n");
+        sb.append("  div.appendChild(content);\n");
+        sb.append("  div.appendChild(input);\n");
+
+//        sb.append("  var closeBtn = document.createElement('span');\n");
+//        sb.append("  closeBtn.setAttribute('style','position:absolute;top:5px;right:10px;cursor:pointer;');\n");
+//        sb.append("  closeBtn.innerText = '×';\n");
+//        sb.append("  closeBtn.onclick=function(){\n");
+//        sb.append("    document.body.removeChild(div);\n");
+//        sb.append("  };\n");
+//        sb.append("  div.appendChild(closeBtn);\n");
+
+//        sb.append("  var closeBtn2 = document.createElement('button');\n");
+//        sb.append("  closeBtn2.setAttribute('style','color:#fff;background-color:#FF9933;cursor:pointer;border:none;height:30px;width:50px;bottom:5px;right:5px;position:absolute;');\n");
+//        sb.append("  closeBtn2.innerText = '关闭';\n");
+//        sb.append("  closeBtn2.onclick=function(){\n");
+//        sb.append("    document.body.removeChild(div);\n");
+//        sb.append("  };\n");
+//        sb.append("  div.appendChild(closeBtn2);\n");
+
+        sb.append("  var okBtn = document.createElement('button');\n");
+        sb.append("  okBtn.setAttribute('style','color:#fff;background-color:#FF9933;cursor:pointer;border:none;height:30px;width:50px;bottom:5px;right:5px;position:absolute;');\n");
+        sb.append("  okBtn.innerText = '确定';\n");
+        sb.append("  okBtn.onclick=function(){\n");
+        sb.append("    div.style.display='none';\n");
+        sb.append("  };\n");
+        sb.append("  div.appendChild(okBtn);\n");
 
         sb.append("  document.body.appendChild(div);\n");
         sb.append("})()");
