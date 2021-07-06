@@ -9,6 +9,7 @@ import okhttp3.Response;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -176,23 +177,26 @@ public class ChromeUtil {
             ChromeServer chromeServer = new ChromeServer(port);
             chromeServer.start();
         } else {
-            String s = FileUtil.readFromFile(script,"utf-8");
-            runScript(s, driver,  proxy);
+            String s = FileUtil.readFromFile(script, "utf-8");
+            runScript(s, driver, proxy);
         }
     }
 
     public static void runScript(String script, String driver, String proxy) throws IOException {
+        boolean enableMob = Arrays.stream(script.split("\n")).filter(m -> m.trim().startsWith("newHar")).count() > 0;
+
         String finalProxy = proxy;
         BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
         if (proxy != null) {
             InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
             browserMobProxy.setChainedProxy(address);
+        }
+        if(enableMob) {
             browserMobProxy.start(0);
-
         }
         ChromeWebDriver webDriver;
         try {
-            if (proxy != null) {
+            if (enableMob) {
                 webDriver = new ChromeWebDriver(driver, browserMobProxy);
             } else {
                 webDriver = new ChromeWebDriver(driver);
@@ -201,7 +205,7 @@ public class ChromeUtil {
             if (e.getMessage().contains("only supports Chrome version")) {
                 System.out.println("chromedriver版本不匹配！");
                 downloadAndUnzip();
-                if (proxy != null) {
+                if (enableMob) {
                     webDriver = new ChromeWebDriver(driver, browserMobProxy);
                 } else {
                     webDriver = new ChromeWebDriver(driver);
