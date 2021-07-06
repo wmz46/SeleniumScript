@@ -1,35 +1,64 @@
 package com.iceolive.selenium;
 
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * @author wangmianzhe
  */
 public class ImageUtil {
-    public static void binaryImage(String filepath, String destPath) throws IOException {
-        File file = new File(filepath);
-        BufferedImage image = ImageIO.read(file);
 
-        int width = image.getWidth();
-        int height = image.getHeight();
-//重点，技巧在这个参数BufferedImage.TYPE_BYTE_BINARY
-        BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                int rgb = image.getRGB(i, j);
-                grayImage.setRGB(i, j, rgb);
-            }
-        }
-
-        File newFile = new File(destPath);
-        ImageIO.write(grayImage, "png", newFile);
+    /**
+     * 获取两张图片的距离
+     * @param imgPath1
+     * @param imgPath2
+     * @param match
+     * @return
+     * @throws IOException
+     */
+    public static Integer getDistance(String imgPath1, String imgPath2, double match) throws IOException {
+        BufferedImage img1 = ImageIO.read(new File(imgPath1));
+        BufferedImage img2 = ImageIO.read(new File(imgPath2));
+        return getDistance(img1, img2, match);
     }
 
-    public static boolean isDarkColor(Color color) {
+    /**
+     * 获取两张图片的距离
+     *
+     * @param img1
+     * @param img2
+     * @param match
+     * @return
+     */
+    private static Integer getDistance(BufferedImage img1, BufferedImage img2, double match) {
+        Rectangle rect = getRectangle(img1);
+        BufferedImage image1 = grayImage(img1);
+        BufferedImage image2 = grayImage(img2);
+        int[] signature = getSignature(image1, rect);
+        for (int i = rect.x; i < image2.getWidth() - rect.width; i++) {
+            Rectangle rect2 = new Rectangle(i, rect.y, rect.width, rect.height);
+            int[] signature2 = getSignature(image2, rect2);
+            double signatureMatch = getSignatureMatch(signature, signature2);
+            if (signatureMatch > match) {
+                return i - rect.x;
+            }
+
+        }
+        return null;
+    }
+
+    /**
+     * 是否深色
+     *
+     * @param color
+     * @return
+     */
+    private static boolean isDarkColor(Color color) {
         int grayLevel = (int) (color.getRed() * 0.299 + color.getGreen() * 0.587 + color.getBlue() * 0.114);
         if (grayLevel >= 192) {
             return false;
@@ -37,24 +66,25 @@ public class ImageUtil {
         return true;
     }
 
-    public static void grayImage(String filepath, String destPath) throws IOException {
-        File file = new File(filepath);
-        BufferedImage image = ImageIO.read(file);
-
+    /**
+     * 灰度化
+     *
+     * @param image
+     * @return
+     */
+    private static BufferedImage grayImage(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        //重点，技巧在这个参数BufferedImage.TYPE_BYTE_GRAY
         BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                int rgb = image.getRGB(i, j);
-                grayImage.setRGB(i, j, rgb);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int rgb = image.getRGB(x, y);
+                grayImage.setRGB(x, y, rgb);
             }
         }
-
-        File newFile = new File(destPath);
-        ImageIO.write(grayImage, "png", newFile);
+        return grayImage;
     }
+
 
     /**
      * 二值化
@@ -66,23 +96,31 @@ public class ImageUtil {
         int width = image.getWidth();
         int height = image.getHeight();
         BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                int rgb = image.getRGB(i, j);
-                grayImage.setRGB(i, j, rgb);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int rgb = image.getRGB(x, y);
+                grayImage.setRGB(x, y, rgb);
             }
         }
         return grayImage;
     }
 
+    /**
+     * 获取图片区域，即排除白色背景的区域，宽高都比实际大小缩小2/5，排除边缘色差过大的区域。
+     *
+     * @param image
+     * @return
+     */
     private static Rectangle getRectangle(BufferedImage image) {
         int top = image.getHeight();
         int bottom = 0;
         int left = image.getWidth();
         int right = 0;
+
+        BufferedImage binaryImage = binaryImage(image);
         for (int x = 0; x < image.getWidth(); x++) {
             for (int y = 0; y < image.getHeight(); y++) {
-                int rgb = image.getRGB(x, y);
+                int rgb = binaryImage.getRGB(x, y);
                 Color c = new Color(rgb);
                 if (isDarkColor(c)) {
                     if (x < left) {
@@ -109,56 +147,48 @@ public class ImageUtil {
         return rectangle;
     }
 
-    private static Integer getDistance(BufferedImage image1, BufferedImage image2) {
-        Rectangle rectangle = getRectangle(image1);
-
-        for (int i = rectangle.x; i < image2.getWidth() - rectangle.width; i++) {
-            boolean flag = true;
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                    Color color = new Color(image1.getRGB(x, y));
-                    Color color1 = new Color(image2.getRGB(i + x, y));
-                    double v = Math.sqrt(Math.pow(color.getRed() - color1.getRed(), 2) + Math.pow(color.getGreen() - color1.getGreen(), 2) + Math.pow(color.getBlue() - color1.getBlue(), 2));
-                    if (v<25) {
-                        flag = false;
-                    }else{
-                        flag = true;
-                    }
-                    if (!flag) {
-                        break;
-                    }
-                }
-                if (!flag) {
-                    break;
-                }
-            }
-            if (flag) {
-                return i;
+    /**
+     * 获取图片特征码
+     *
+     * @param image
+     * @param rect
+     * @return
+     */
+    private static int[] getSignature(BufferedImage image, Rectangle rect) {
+        int w = rect.width;
+        int h = rect.height;
+        int[] pixels = new int[w * h];
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                pixels[x * h + y] = image.getRGB(x + rect.x, y + rect.y);
             }
         }
-        return null;
+        double avg = Arrays.stream(pixels).average().getAsDouble();
+        int[] signature = Arrays.stream(pixels).map(m -> m >= avg ? 1 : 0).toArray();
+        return signature;
     }
 
-    public static void main(String[] args) throws IOException {
-        String filepath1 = System.getProperty("user.dir") + "/2.png";
-        String filepath2 = System.getProperty("user.dir") + "/1.png";
-        String filepath3 = System.getProperty("user.dir") + "/3.png";
-        BufferedImage image1 = ImageIO.read(new File(filepath1));
-        BufferedImage image2 = ImageIO.read(new File(filepath2));
-
-        int distance = getDistance(image1, image2);
-        System.out.println(distance);
-        for (int x = distance; x < image2.getWidth(); x++) {
-            for (int y = 0; y < image2.getHeight(); y++) {
-                int rgb = image1.getRGB(x - distance, y);
-                if (rgb != -1) {
-                    image2.setRGB(x, y, rgb);
-                }
+    /**
+     * 获取特征码匹配度
+     *
+     * @param a
+     * @param b
+     * @return
+     */
+    private static double getSignatureMatch(int[] a, int[] b) {
+        if (a.length != b.length) {
+            return 0;
+        }
+        int length = a.length;
+        int sameCount = 0;
+        for (int i = 0; i < length; i++) {
+            if (a[i] == b[i]) {
+                sameCount++;
             }
         }
-        ImageIO.write(image2, "png", new File(filepath3));
-
-
+        return (double) sameCount / length;
     }
+
+
 
 }
