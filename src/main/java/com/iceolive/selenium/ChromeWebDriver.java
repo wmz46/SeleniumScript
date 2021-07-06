@@ -168,6 +168,15 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     statement = "var _$map = arguments[0];" + statement;
                     webDriver.executeScript(statement, variableMap);
                     break;
+                case "execAsync":
+                    statement = "var _$map = arguments[0]; var _$cb = arguments[arguments.length - 1];" + statement;
+                    webDriver.executeAsyncScript(statement, variableMap);
+                    break;
+                case "setAsync":
+                    statement = "var _$map = arguments[0]; var _$cb = arguments[arguments.length - 1];" + statement;
+                    Object response = webDriver.executeAsyncScript(statement, variableMap);
+                    variableMap.put(target, response);
+                    break;
                 case "scroll":
                     webDriver.executeScript("window.scrollBy(" + target + ");");
                     break;
@@ -366,20 +375,20 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "slowDrag":
                     WebElement element1 = webDriver.findElement(By.cssSelector(target));
                     Integer dist = Integer.parseInt(value);
-                    int time = (int)(Float.parseFloat(timeout)*1000);
+                    int time = (int) (Float.parseFloat(timeout) * 1000);
                     Random random = new Random();
                     int n = 3;
                     builder = new Actions(webDriver);
                     builder.clickAndHold(element1);
-                    for(int j=0;j<n;j++){
-                        if(j<n-1){
-                            int tempDist = random.nextInt(dist-1)+1;
-                            int tempTime = random.nextInt(time-1)+1;
+                    for (int j = 0; j < n; j++) {
+                        if (j < n - 1) {
+                            int tempDist = random.nextInt(dist - 1) + 1;
+                            int tempTime = random.nextInt(time - 1) + 1;
                             dist -= tempDist;
                             time -= tempTime;
                             builder.moveByOffset(tempDist, 0);
                             builder.pause(tempTime);
-                        }else{
+                        } else {
                             builder.moveByOffset(dist, 0);
                             builder.pause(time);
                         }

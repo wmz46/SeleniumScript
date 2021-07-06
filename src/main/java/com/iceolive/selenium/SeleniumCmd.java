@@ -26,11 +26,11 @@ public class SeleniumCmd {
     }
 
     public boolean isSetCmd() {
-        return "set".equals(this.command);
+        return "set".equals(this.command) || "setAsync".equals(this.command);
     }
 
     public boolean isExecCmd() {
-        return "exec".equals(this.command);
+        return "exec".equals(this.command) || "execAsync".equals(this.command);
     }
 
     public boolean isWaitCmd() {
@@ -45,7 +45,9 @@ public class SeleniumCmd {
         return "when".equals(this.command);
     }
 
-    public boolean isPromptCmd(){return "prompt".equals(this.command);}
+    public boolean isPromptCmd() {
+        return "prompt".equals(this.command);
+    }
 
     public SeleniumCmd(String line) {
         this.line = line;
@@ -85,8 +87,9 @@ public class SeleniumCmd {
             }
         }
     }
+
     @Override
-    public String toString(){
+    public String toString() {
         return this.line;
     }
 }
