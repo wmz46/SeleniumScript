@@ -13,18 +13,39 @@ import java.util.Arrays;
  */
 public class ImageUtil {
 
+    public static Integer getDistance(String imgPath1, String imgPath2) {
+        try {
+            BufferedImage img1 = ImageIO.read(new File(imgPath1));
+            BufferedImage img2 = ImageIO.read(new File(imgPath2));
+            double match = 0.8;
+            Integer distance = null;
+            while (distance == null) {
+                distance = getDistance(img1, img2, match);
+                match -= 0.01;
+            }
+            return distance;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * 获取两张图片的距离
+     *
      * @param imgPath1
      * @param imgPath2
      * @param match
      * @return
      * @throws IOException
      */
-    public static Integer getDistance(String imgPath1, String imgPath2, double match) throws IOException {
-        BufferedImage img1 = ImageIO.read(new File(imgPath1));
-        BufferedImage img2 = ImageIO.read(new File(imgPath2));
-        return getDistance(img1, img2, match);
+    public static Integer getDistance(String imgPath1, String imgPath2, double match) {
+        try {
+            BufferedImage img1 = ImageIO.read(new File(imgPath1));
+            BufferedImage img2 = ImageIO.read(new File(imgPath2));
+            return getDistance(img1, img2, match);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -148,7 +169,7 @@ public class ImageUtil {
     }
 
     /**
-     * 获取图片特征码
+     * 获取图片特征码,感知哈希算法
      *
      * @param image
      * @param rect
@@ -169,6 +190,26 @@ public class ImageUtil {
     }
 
     /**
+     * 获取每行像素平均值特征码
+     * @param image
+     * @param rect
+     * @return
+     */
+    private static int[] getRowSignature(BufferedImage image, Rectangle rect) {
+        int w = rect.width;
+        int h = rect.height;
+        int[] rows = new int[h];
+        for (int y = 0; y < h; y++) {
+            int sum = 0;
+            for (int x = 0; x < w; x++) {
+                sum += image.getRGB(x + rect.x, y + rect.y);
+            }
+            int avg =(int) ((double) sum / w);
+            rows[y] = avg;
+        }
+        return rows;
+    }
+    /**
      * 获取特征码匹配度
      *
      * @param a
@@ -186,9 +227,28 @@ public class ImageUtil {
                 sameCount++;
             }
         }
+
         return (double) sameCount / length;
     }
 
+    public static void main(String[] args) throws IOException {
+        BufferedImage image1 = ImageIO.read(new File("2.png"));
+        BufferedImage image2 = ImageIO.read(new File("1.png"));
+        Rectangle rect = getRectangle(image1);
+        Integer distance = getDistance("2.png", "1.png", 0.71);
+        for (int x = 0; x < image2.getWidth(); x++) {
+            for (int y = 0; y < image2.getHeight(); y++) {
+                if (image1.getRGB(x, y) != -1) {
+                    image2.setRGB(x, y, image1.getRGB(x, y));
+                }
 
+            }
+        }
+        Graphics2D graphics = image2.createGraphics();
+        graphics.setColor(Color.red);
+        graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
+        graphics.drawRect(rect.x + distance, rect.y, rect.width, rect.height);
+        ImageIO.write(image2, "png", new File("3.png"));
+    }
 
 }

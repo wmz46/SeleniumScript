@@ -45,6 +45,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     boolean stop = false;
 
+    Actions builder = null;
+
     public ChromeWebDriver(String path) {
         File chromeDriverPath = new File(path);
         System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
@@ -101,7 +103,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String command = item.getCommand();
             String target = replaceVariable(item.getTarget());
             String value = replaceVariable(item.getValue());
-            Integer timeout = Integer.parseInt(replaceVariable(item.getTimeout()));
+            String timeout = replaceVariable(item.getTimeout());
             String statement = item.getStatement();
             System.err.println(new Date().toString() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
 
@@ -202,7 +204,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "drag":
                     WebElement element = webDriver.findElement(By.cssSelector(target));
-                    Actions builder = new Actions(webDriver);
+                    builder = new Actions(webDriver);
                     builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
                     break;
                 case "repeat":
@@ -252,7 +254,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "wait":
                     try {
-                        WebDriverWait wait = new WebDriverWait(webDriver, timeout, 100);
+                        WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
                         if ("visible".equals(value)) {
                             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
                         } else if ("url".equals(value)) {
@@ -334,7 +336,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "prompt":
                     this.prompt(value);
                     try {
-                        WebDriverWait wait = new WebDriverWait(webDriver, timeout, 100);
+                        WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
                         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
                         String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
                         variableMap.put(target, text);
@@ -352,7 +354,38 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     String[] split = target.split(",");
                     int w = Integer.parseInt(split[0]);
                     int h = Integer.parseInt(split[1]);
-                    webDriver.manage().window().setSize(new Dimension(w,h));
+                    webDriver.manage().window().setSize(new Dimension(w, h));
+                    break;
+                case "pos":
+                    String img1 = value;
+                    String img2 = timeout;
+                    Integer distance1 = ImageUtil.getDistance(img1, img2);
+                    variableMap.put(target, distance1);
+                    System.out.println(distance1);
+                    break;
+                case "slowDrag":
+                    WebElement element1 = webDriver.findElement(By.cssSelector(target));
+                    Integer dist = Integer.parseInt(value);
+                    int time = (int)(Float.parseFloat(timeout)*1000);
+                    Random random = new Random();
+                    int n = 3;
+                    builder = new Actions(webDriver);
+                    builder.clickAndHold(element1);
+                    for(int j=0;j<n;j++){
+                        if(j<n-1){
+                            int tempDist = random.nextInt(dist-1)+1;
+                            int tempTime = random.nextInt(time-1)+1;
+                            dist -= tempDist;
+                            time -= tempTime;
+                            builder.moveByOffset(tempDist, 0);
+                            builder.pause(tempTime);
+                        }else{
+                            builder.moveByOffset(dist, 0);
+                            builder.pause(time);
+                        }
+                    }
+                    builder.release();
+                    builder.perform();
                     break;
                 default:
                     break;
@@ -425,7 +458,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     }
                     list.add(seleniumCmd);
                     i = endLineNum;
-                }else{
+                } else {
                     list.add(seleniumCmd);
                 }
             } else if (seleniumCmd.isWhenCmd()) {
