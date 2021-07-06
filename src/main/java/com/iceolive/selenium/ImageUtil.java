@@ -36,7 +36,6 @@ public class ImageUtil {
      * @param imgPath2
      * @param match
      * @return
-     * @throws IOException
      */
     public static Integer getDistance(String imgPath1, String imgPath2, double match) {
         try {
