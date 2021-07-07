@@ -216,7 +216,7 @@ public class ChromeUtil {
         }
         ChromeWebDriver finalWebDriver = webDriver;
         webDriver.addWebDriverCloseEvent(() -> {
-            if (finalProxy != null) {
+            if (enableMob) {
                 browserMobProxy.stop();
             }
             finalWebDriver.quit();
@@ -224,7 +224,7 @@ public class ChromeUtil {
         try {
             webDriver.run(script);
             //打印所有的变量
-            System.out.println(webDriver.getVariableMap());
+//            System.out.println(webDriver.getVariableMap());
             System.out.println("执行完毕");
         } catch (Exception e) {
             System.out.println("执行出错:" + e.toString());
