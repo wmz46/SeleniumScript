@@ -181,12 +181,12 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     webDriver.executeScript("window.scrollBy(" + target + ");");
                     break;
                 case "switch":
-                    if (Pattern.matches("^\\d+$", target)) {
+                    if (target == null) {
+                        webDriver.switchTo().defaultContent();
+                    } else if (Pattern.matches("^\\d+$", target)) {
                         webDriver.switchTo().frame(Integer.parseInt(target));
                     } else if (target != null) {
                         webDriver.switchTo().frame(target);
-                    } else {
-                        webDriver.switchTo().defaultContent();
                     }
                     break;
                 case "sleep":
