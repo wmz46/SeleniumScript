@@ -746,9 +746,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             sb.append("            if (cell != null) {\n");
             sb.append("              cell = cell.toString();\n");
             sb.append("              cell = cell.replace(/\"/g, '\"\"');\n");
-            sb.append("              cell = cell.replace(new RegExp(rowDelimiter, 'g'), ' ');\n");
-            sb.append("              cell = new RegExp(columnDelimiter).test(cell) ? `\"${cell}\"` :\n");
-            sb.append("                        (cell.indexOf(\'\"') > -1) ? `\"${cell}\"` : cell;\n");
+            sb.append("              //cell = cell.replace(new RegExp(rowDelimiter, 'g'), ' ');\n");
+            sb.append("              cell = (new RegExp(columnDelimiter).test(cell) || new RegExp('[\\r\\n\"]').test(cell)) ? `\"${cell}\"` : cell;\n");
             sb.append("              return pre ? pre + columnDelimiter + cell : pre + cell;\n");
             sb.append("            }\n");
             sb.append("          }\n");
