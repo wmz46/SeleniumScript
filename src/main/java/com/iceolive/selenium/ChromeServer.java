@@ -53,7 +53,7 @@ public class ChromeServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        System.out.println("本地服务启动成功 端口：" + this.port);
+        System.out.println("本地服务启动成功 端口：" + this.port + "  当前版本："+VersionUtil.getVersion());
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
     }
