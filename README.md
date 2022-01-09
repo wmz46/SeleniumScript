@@ -135,7 +135,17 @@ exec
  alert(1);
 </script>
 ```
-### 10.存储值
+### 10.异步执行js
+使用_$cb进行回调
+```js
+execAsync
+<script>
+ setTimeout(function(){
+  _$cb()
+ },1000)
+</script>
+```
+### 11.存储值
 必须有return，return的值将会存储在map中。    
 如要在\<script>\</script>中获取设置过的值，可以通过argument[0][key]获取。
 ```js
@@ -151,12 +161,22 @@ set a
     return 1;
 </script>
 ```
-### 11.强制等待
+### 12.异步存储值
+使用_$cb进行回调，参数值将会存储在map中，一般用于在页面fetch接口获取值后进行回调。
+```js
+setAsync a
+<script>
+  fetch('http://xxx.xx/api/xxx').then(m=>{return m.text()}).then(m=>{ 
+   _$cb(m) 
+  })
+</script>
+```
+### 13.强制等待
 ```js
 //第二个参数为等待的秒数,这里可以为小数，如0.5表示等待0.5秒
 sleep 2
 ```
-### 12.等待并执行操作（目前只支持三种等待）
+### 14.等待并执行操作（目前只支持三种等待）
 该指令不一定需要带then和else操作。
 ```js
 //等待元素可见
@@ -198,7 +218,7 @@ else
   click '#btn2'
 end
 ```
-### 13.逻辑判断
+### 15.逻辑判断
 when后面必须紧跟着\<script>\</script>,然后才跟着then,else,end。else如果没有内容可省略。    
 js脚本必须有return，且返回值为boolean型。
 ```js
@@ -218,7 +238,7 @@ else
     click '#btn2'
 end
 ```
-### 14.循环指令
+### 16.循环指令
 - 指定循环次数    
 当指定循环次数时，可不添加\<script>\</script>控制脚本，当然也可以使用脚本，当脚本return false则可提前退出循环。    
 注意：脚本判断在执行循环前执行。
@@ -249,11 +269,11 @@ begin
    </script>
 end
 ```
-### 15.页面提示语
+### 17.页面提示语
 ```js
 alert '提示内容'
 ```
-### 16.网页下载存储值的文件，支持json和csv
+### 18.网页下载存储值的文件，支持json和csv
 ```js
 //第二个参数为存储值的key，值必须为对象数组，即[{a:1,b:2},{a:3,b:4}]。
 //第三个参数为保存的文件名，文件名暂不支持变量
@@ -262,23 +282,23 @@ saveCsv list list.csv
 //第三个参数为保存的文件名，文件名暂不支持变量
 saveJson obj obj.json
 ```
-### 17.截图
+### 19.截图
 ```js
 //第二个参数为要截图的元素
 //第三个参数为保存的文件路径,图片格式应为png，也可保存为pdf
 screenshot body 1.png
 ```
-### 18.日志
+### 20.日志
 ```js
 //第二个参数为日志内容
 log '程序启动'
 ```
-### 19.停止
+### 21.停止
 ```js
 //不继续执行
 stop
 ```
-### 20.模拟按键
+### 22.模拟按键
 ```js
 //目前支持 f5,home,end
 keydown f5
@@ -286,27 +306,27 @@ keydown f5
 keydown end
 keydown home
 ```
-### 21.newHar
+### 23.newHar
 ```js
 //需写在open前，用于获取请求日志，只有当启动BrowserMobProxy代理才生效
 newHar
 ```
 
-### 20.endHar
+### 24.endHar
 ```js
 //需写在open后，获取请求日志，并赋值到logs中。格式[{url:'xxx',method:'get',content:'xxx'},...]
 endHar logs
 ```
-### 21.最大化
+### 25.最大化
 ```js
 maximize
 ```
-### 22.读取excel
+### 26.读取excel
 ```js
 //读取excel数据，并赋值到list,对象数组，对象所有字段类型均为字符串，excel首行为标题行
 loadExcel 'D://1.xlsx' list
 ```
-### 23.prompt
+### 27.prompt
 else 为超时时的操作。
 该指令不一定需要带then和else操作。
 ```js
