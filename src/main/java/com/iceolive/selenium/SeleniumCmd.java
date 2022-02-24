@@ -12,13 +12,15 @@ import java.util.regex.Pattern;
 @Data
 public class SeleniumCmd {
     private String command;
-    private String target;
-    private String value;
-    private String timeout;
+    private String arg1;
+    private String arg2;
+    private String arg3;
+    private String arg4;
     private List<SeleniumCmd> thenCommands;
     private List<SeleniumCmd> elseCommands;
     private List<SeleniumCmd> repeatCommands;
     private String statement;
+    private String sqlStatement;
     private String line;
 
     public boolean isCommand() {
@@ -40,6 +42,12 @@ public class SeleniumCmd {
     public boolean isRepeatCmd() {
         return "repeat".equals(this.command);
     }
+    public boolean isQuerySql(){
+        return "querySql".equals(this.command);
+    }
+    public boolean isExecSql(){
+        return "execSql".equals(this.command);
+    }
 
     public boolean isWhenCmd() {
         return "when".equals(this.command);
@@ -58,31 +66,41 @@ public class SeleniumCmd {
         if (line.startsWith("\uFEFF")) {
             line = line.substring(1);
         }
-        Pattern pattern = Pattern.compile("^\\s*([^\\s]+)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)");
+        Pattern pattern = Pattern.compile("^\\s*([^\\s]+)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)");
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {
             this.command = matcher.group(1);
-            if (matcher.groupCount() > 5) {
-                if (matcher.group(6) == null) {
-                    this.target = matcher.group(5);
+            int g = 5;
+            int i = 1;
+            if (matcher.groupCount() > g*i) {
+                if (matcher.group(g*i+1) == null) {
+                    this.arg1 = matcher.group(g*i);
                 } else {
-                    this.target = matcher.group(6);
+                    this.arg1 = matcher.group(g*i+1);
                 }
             }
-
-            if (matcher.groupCount() > 10) {
-                if (matcher.group(11) == null) {
-                    this.value = matcher.group(10);
+            i++;
+            if (matcher.groupCount() > g*i) {
+                if (matcher.group(g*i+1) == null) {
+                    this.arg2 = matcher.group(g*i);
                 } else {
-                    this.value = matcher.group(11);
+                    this.arg2 = matcher.group(g*i+1);
                 }
             }
-            this.timeout = "3";
-            if (matcher.groupCount() > 15) {
-                if (matcher.group(16) != null) {
-                    this.timeout = matcher.group(16);
-                } else if (matcher.group(15) != null) {
-                    this.timeout = matcher.group(15);
+            i++;
+            if (matcher.groupCount() > g*i) {
+                if (matcher.group(g*i+1) == null) {
+                    this.arg3 = matcher.group(g*i);
+                } else {
+                    this.arg3 = matcher.group(g*i+1);
+                }
+            }
+            i++;
+            if (matcher.groupCount() > g*i) {
+                if (matcher.group(g*i+1) == null) {
+                    this.arg4 = matcher.group(g*i);
+                } else {
+                    this.arg4 = matcher.group(g*i+1);
                 }
             }
         }

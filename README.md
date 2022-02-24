@@ -338,3 +338,62 @@ else
     alert timeout
 end
 ```
+### 28.setConn
+创建数据库连接    
+第二个参数为自定义的连接名，和set变量是两套存储容器，不会引起变量名冲突    
+第三个参数为数据库连接字符串，参考jdbc，目前支持h2,mysql,sqlserver和达梦    
+第四个参数为用户名    
+第五个参数为密码    
+```js
+setConn conn_a 'jdbc:mysql://127.0.0.1:3306/db?serverTimezone=UTC&useSSL=false&characterEncoding=utf-8' root 123456
+
+```
+### 29.querySql
+查询数据库    
+只允许执行一个select      
+第二个参数为结果集存储的key，结果集类型为对象数组，为了和网页数据交互，时间类型字段会转为字符串，格式统一为"yyyy-MM-dd HH:mm:ss"        
+第三个参数为连接名    
+sql脚本通过<sql></sql>包裹，如有入参变量请使用#{}或${}包裹变量名     
+
+```js
+set id 1
+querySql list conn_a 
+<sql>
+select * from tb1 where id = #{id} limit 1 
+</sql>
+```
+
+如果是动态拼接sql请使用<script></script>代替<sql></sql>        
+```js
+set id 1
+querySql list conn_a 
+<script>
+return 'select * from tb1 where id = '+_$map.id+' limit 1' 
+</script>
+```
+
+### 30.execSql
+执行sql     
+支持多条sql执行，多条语句请用分号隔开     
+当只执行一条sql时，才会返回insert的自增主键           
+第二个参数为更新记录数存储的key    
+第三个参数为连接名    
+第四个参数为insert返回的自增主键存储的key，非必要    
+sql脚本通过<sql></sql>包裹，如有入参变量请使用#{}或${}包裹变量名    
+
+```js
+set name '张三'
+execSql i conn_a id 
+<sql>
+insert into tb1(name) values(#{name})
+</sql>
+```
+
+如果是动态拼接sql请使用<script></script>代替<sql></sql>    
+```js
+set name '张三'
+execSql i conn_a id 
+<script>
+    return 'insert into tb1(name) values('+_$map.name+')'
+</scripit>
+```

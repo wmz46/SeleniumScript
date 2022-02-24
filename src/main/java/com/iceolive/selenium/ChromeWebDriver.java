@@ -1,6 +1,7 @@
 package com.iceolive.selenium;
 
 import com.iceolive.util.ExcelUtil;
+import com.iceolive.util.StringUtil;
 import com.lowagie.text.BadElementException;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -23,6 +24,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -40,6 +42,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     private ChromeDriver webDriver;
 
     private Map<String, Object> variableMap = new HashMap<>();
+
+    private Map<String, Connection> connectionMap = new HashMap<>();
 
     BrowserMobProxy proxy;
 
@@ -101,14 +105,37 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             }
             SeleniumCmd item = list.get(i);
             String command = item.getCommand();
-            String target = replaceVariable(item.getTarget());
-            String value = replaceVariable(item.getValue());
-            String timeout = replaceVariable(item.getTimeout());
+            String target = replaceVariable(item.getArg1());
+            String value = replaceVariable(item.getArg2());
+            String timeout = replaceVariable(item.getArg3());
+            String password = replaceVariable(item.getArg4());
             String statement = item.getStatement();
+            String sqlStatement = item.getSqlStatement();
             System.err.println(new Date().toString() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
 
             switch (command) {
+                case "setConn":
+                    connectionMap.put(target, SqlUtil.getConnection(value, timeout, password));
+                    break;
+                case "querySql":
+                    if (StringUtil.isNotEmpty(statement)) {
+                        statement = "var _$map = arguments[0];" + statement;
+                        sqlStatement = (String) webDriver.executeScript(statement, variableMap);
+                    }
+                    variableMap.put(target, SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap));
 
+                    break;
+                case "execSql":
+                    if (StringUtil.isNotEmpty(statement)) {
+                        statement = "var _$map = arguments[0];" + statement;
+                        sqlStatement = (String) webDriver.executeScript(statement, variableMap);
+                    }
+                    SqlUtil.ExecResult execResult = SqlUtil.execSql(connectionMap.get(value), sqlStatement, variableMap);
+                    variableMap.put(target, execResult.getCount());
+                    if (StringUtil.isNotEmpty(timeout)) {
+                        variableMap.put(timeout, execResult.getPrimaryKey());
+                    }
+                    break;
                 case "screenshot":
                     try {
                         WebElement element1 = webDriver.findElement(By.cssSelector(target));
@@ -263,6 +290,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "wait":
                     try {
+                        if (StringUtil.isEmpty(timeout)) {
+                            timeout = "3";
+                        }
                         WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
                         if ("visible".equals(value)) {
                             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
@@ -345,6 +375,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "prompt":
                     this.prompt(value);
                     try {
+                        if (StringUtil.isEmpty(timeout)) {
+                            timeout = "3";
+                        }
                         WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
                         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
                         String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
@@ -375,6 +408,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 case "slowDrag":
                     WebElement element1 = webDriver.findElement(By.cssSelector(target));
                     Integer dist = Integer.parseInt(value);
+                    if (StringUtil.isEmpty(timeout)) {
+                        timeout = "3";
+                    }
                     int time = (int) (Float.parseFloat(timeout) * 1000);
                     Random random = new Random();
                     int n = 3;
@@ -575,7 +611,35 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     }
                     seleniumCmd.setStatement(statement);
                     list.add(seleniumCmd);
-                } else if (seleniumCmd.getValue() != null) {
+                } else if (seleniumCmd.getArg2() != null) {
+                    list.add(seleniumCmd);
+                }
+            } else if (seleniumCmd.isQuerySql() || seleniumCmd.isExecSql()) {
+                if (i + 1 < lines.length && "<sql>".equals(lines[i + 1].trim())) {
+                    String statement = "";
+                    for (int j = i + 2; j < lines.length; j++) {
+                        if (lines[j].trim().equals("</sql>")) {
+                            i = j;
+                            break;
+                        } else {
+                            statement += lines[j] + "\n";
+                        }
+                    }
+                    seleniumCmd.setSqlStatement(statement);
+                    list.add(seleniumCmd);
+                } else if (i + 1 < lines.length && "<script>".equals(lines[i + 1].trim())) {
+                    String statement = "";
+                    for (int j = i + 2; j < lines.length; j++) {
+                        if (lines[j].trim().equals("</script>")) {
+                            i = j;
+                            break;
+                        } else {
+                            statement += lines[j] + "\n";
+                        }
+                    }
+                    seleniumCmd.setStatement(statement);
+                    list.add(seleniumCmd);
+                } else {
                     list.add(seleniumCmd);
                 }
             } else if (seleniumCmd.isCommand()) {
