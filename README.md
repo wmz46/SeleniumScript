@@ -353,7 +353,7 @@ setConn conn_a 'jdbc:mysql://127.0.0.1:3306/db?serverTimezone=UTC&useSSL=false&c
 只允许执行一个select      
 第二个参数为结果集存储的key，结果集类型为对象数组，为了和网页数据交互，时间类型字段会转为字符串，格式统一为"yyyy-MM-dd HH:mm:ss"        
 第三个参数为连接名    
-sql脚本通过<sql></sql>包裹，如有入参变量请使用#{}或${}包裹变量名     
+sql脚本通过`<sql></sql>`包裹，如有入参变量请使用#{}或${}包裹变量名     
 
 ```js
 set id 1
@@ -363,7 +363,7 @@ select * from tb1 where id = #{id} limit 1
 </sql>
 ```
 
-如果是动态拼接sql请使用<script></script>代替<sql></sql>        
+如果是动态拼接sql请使用`<script></script>`代替`<sql></sql>`        
 ```js
 set id 1
 querySql list conn_a 
@@ -379,7 +379,7 @@ return 'select * from tb1 where id = '+_$map.id+' limit 1'
 第二个参数为更新记录数存储的key    
 第三个参数为连接名    
 第四个参数为insert返回的自增主键存储的key，非必要    
-sql脚本通过<sql></sql>包裹，如有入参变量请使用#{}或${}包裹变量名    
+sql脚本通过`<sql></sql>`包裹，如有入参变量请使用#{}或${}包裹变量名    
 
 ```js
 set name '张三'
@@ -389,7 +389,7 @@ insert into tb1(name) values(#{name})
 </sql>
 ```
 
-如果是动态拼接sql请使用<script></script>代替<sql></sql>    
+如果是动态拼接sql请使用`<script></script>`代替`<sql></sql>`     
 ```js
 set name '张三'
 execSql i conn_a id 
