@@ -394,6 +394,6 @@ insert into tb1(name) values(#{name})
 set name '张三'
 execSql i conn_a id 
 <script>
-    return 'insert into tb1(name) values('+_$map.name+')'
+    return "insert into tb1(name) values('"+_$map.name+"')"
 </scripit>
 ```
