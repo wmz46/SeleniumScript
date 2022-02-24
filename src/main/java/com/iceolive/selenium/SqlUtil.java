@@ -56,6 +56,8 @@ public class SqlUtil {
                     }
                     list.add(row);
                 }
+                rs.close();
+                ps.close();
                 return list;
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -85,6 +87,8 @@ public class SqlUtil {
                     }
                     result.setPrimaryKey(id);
                     result.setCount(count);
+                    rs.close();
+                    ps.close();
                     return result;
                 } else {
                     conn.setAutoCommit(false);
@@ -93,10 +97,12 @@ public class SqlUtil {
                         PreparedStatement ps = conn.prepareStatement(sqlAndParams.getSql(), Statement.NO_GENERATED_KEYS);
                         addParams(sqlAndParams, ps);
                         count += ps.executeUpdate();
+                        ps.close();
                     }
                     conn.commit();
                     conn.setAutoCommit(true);
                     result.setCount(count);
+
                     return result;
                 }
 
