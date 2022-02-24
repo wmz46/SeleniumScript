@@ -34,6 +34,9 @@ public class SeleniumCmd {
     public boolean isExecCmd() {
         return "exec".equals(this.command) || "execAsync".equals(this.command);
     }
+    public boolean isWinCmd(){
+        return "cmd".equals(this.command);
+    }
 
     public boolean isWaitCmd() {
         return "wait".equals(this.command);

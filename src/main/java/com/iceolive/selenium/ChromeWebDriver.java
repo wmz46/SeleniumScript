@@ -114,6 +114,52 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             System.err.println(new Date().toString() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
 
             switch (command) {
+                case "win32_getByTitle":
+                    variableMap.put(target,Win32Api.getByTitle(value));
+                    break;
+                case "win32_getAllByPID":
+                    variableMap.put(target,Win32Api.getAllByPID(Integer.parseInt(value)));
+                    break;
+                case "win32_getChildren":
+                    variableMap.put(target,Win32Api.getChildren(Long.parseLong(value)));
+                    break;
+                case "win32_getTitle":
+                    variableMap.put(target,Win32Api.getTitle(Long.parseLong(value)));
+                    break;
+                case "win32_setTopMost":
+                    Win32Api.setTopMost(Long.parseLong(target));
+                    break;
+                case "win32_showWindow":
+                    if(value.equals("normal")){
+                        value = "1";
+                    }else if(value.equals("min")){
+                        value = "2";
+                    }else if(value.equals("max")){
+                        value = "3";
+                    }
+                    Win32Api.showWindow(Long.parseLong(target), Integer.parseInt(value));
+                    break;
+                case "win32_getPID":
+                    variableMap.put(target, Win32Api.getPID(Long.parseLong(value)));
+                    break;
+                case "win32_getDesktop":
+                    variableMap.put(target, Win32Api.getDesktop());
+                    break;
+                case "win32_screenshot":
+                    try {
+                        BufferedImage screenShot = Win32Api.getScreenShot(Long.parseLong(target));
+                        ImageIO.write(screenShot, "png", new File(value));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case "cmd":
+                    statement = "var _$map = arguments[0];" + statement;
+                    List<String> args = (List<String>) webDriver.executeScript(statement, variableMap);
+                    if (StringUtil.isNotEmpty(target)) {
+                        variableMap.put(target, CmdUtil.callCmd(args.toArray(new String[0])));
+                    }
+                    break;
                 case "setConn":
                     connectionMap.put(target, SqlUtil.getConnection(value, timeout, password));
                     break;
@@ -598,7 +644,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     seleniumCmd.setRepeatCommands(parse(repeatLines));
                 }
                 list.add(seleniumCmd);
-            } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd()) {
+            } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd() || seleniumCmd.isWinCmd()) {
                 if (i + 1 < lines.length && "<script>".equals(lines[i + 1].trim())) {
                     String statement = "";
                     for (int j = i + 2; j < lines.length; j++) {

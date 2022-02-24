@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 ## 一、工具类介绍
@@ -338,8 +338,7 @@ else
     alert timeout
 end
 ```
-### 28.setConn
-创建数据库连接    
+### 28.创建数据库连接 
 第二个参数为自定义的连接名，和set变量是两套存储容器，不会引起变量名冲突    
 第三个参数为数据库连接字符串，参考jdbc，目前支持h2,mysql,sqlserver和达梦    
 第四个参数为用户名    
@@ -348,8 +347,7 @@ end
 setConn conn_a 'jdbc:mysql://127.0.0.1:3306/db?serverTimezone=UTC&useSSL=false&characterEncoding=utf-8' root 123456
 
 ```
-### 29.querySql
-查询数据库    
+### 29.查询数据库    
 只允许执行一个select      
 第二个参数为结果集存储的key，结果集类型为对象数组，为了和网页数据交互，时间类型字段会转为字符串，格式统一为"yyyy-MM-dd HH:mm:ss"        
 第三个参数为连接名    
@@ -372,8 +370,8 @@ return 'select * from tb1 where id = '+_$map.id+' limit 1'
 </script>
 ```
 
-### 30.execSql
-执行sql     
+### 30.执行sql
+     
 支持多条sql执行，多条语句请用分号隔开     
 当只执行一条sql时，才会返回insert的自增主键           
 第二个参数为更新记录数存储的key    
@@ -396,4 +394,35 @@ execSql i conn_a id
 <script>
     return "insert into tb1(name) values('"+_$map.name+"')"
 </scripit>
+```
+### 31.执行cmd脚本
+第二个参数为结果存储的key，处理结果为批处理打印的字符串,非必要     
+`<script></script>`包裹的是执行的命令，必须是字符串数组
+```js
+cmd a
+<script>
+    
+return 'ping www.baidu.com'.split(' ')
+</script>
+``` 
+### 32.win32
+```js
+//根据窗口标题查找窗口句柄(long)，并存储到第二个参数设置的key中。
+win32_getByTitle hwnd 任务管理器
+//根据进程pid获取所有窗口句柄(List<long>),并存储到第二个参数设置的key中。
+win32_getAllByPID hwnds 11202
+//根据窗口句柄获取所有子控件句柄(List<Long>)，并存储到第二个参数设置的key中
+win32_getChildren hwnds 134642
+//根据窗口句柄获取窗口标题,并存储到第二个参数的key中
+win32_getTitle 134642
+//根据窗口句柄设置窗口置顶
+win32_setTopMost 134642
+//控制窗口最大化最小化，第二个参数为窗口句柄，第三个参数 1 正常 2 最小化 3 最大化 或 normal min max
+win32_showWindow 134642 3
+//根据窗口句柄获取进程id,并存储到第二个参数设置的key中。
+win32_getPID pid 134642
+//获取桌面句柄（long），并存储到第二个参数的key中
+win32_getDesktop hwnd
+//根据窗口句柄截图并保存
+win32_screenshot 134642 1.jpg
 ```
