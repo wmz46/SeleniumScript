@@ -12,6 +12,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -229,8 +230,17 @@ public class ChromeUtil {
             //打印所有的变量
 //            System.out.println(webDriver.getVariableMap());
             log.info("执行完毕");
+
         } catch (Exception e) {
             log.error("执行出错:" + e.toString());
+        }
+        if(headless){
+            //无浏览器窗口模式执行完毕需要关闭对应的webDriver
+            if (enableMob) {
+                browserMobProxy.stop();
+            }
+            finalWebDriver.close();
+            finalWebDriver.quit();
         }
     }
 
