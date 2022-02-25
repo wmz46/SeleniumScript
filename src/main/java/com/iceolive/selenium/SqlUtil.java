@@ -83,7 +83,6 @@ public class SqlUtil {
                     Long id = null;
                     if (rs.next()) {
                         id = rs.getLong(1);
-                        System.out.println("数据主键：" + id);
                     }
                     result.setPrimaryKey(id);
                     result.setCount(count);

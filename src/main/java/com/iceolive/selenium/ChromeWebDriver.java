@@ -115,26 +115,26 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
             switch (command) {
                 case "win32_getByTitle":
-                    variableMap.put(target,Win32Api.getByTitle(value));
+                    variableMap.put(target, Win32Api.getByTitle(value));
                     break;
                 case "win32_getAllByPID":
-                    variableMap.put(target,Win32Api.getAllByPID(Integer.parseInt(value)));
+                    variableMap.put(target, Win32Api.getAllByPID(Integer.parseInt(value)));
                     break;
                 case "win32_getChildren":
-                    variableMap.put(target,Win32Api.getChildren(Long.parseLong(value)));
+                    variableMap.put(target, Win32Api.getChildren(Long.parseLong(value)));
                     break;
                 case "win32_getTitle":
-                    variableMap.put(target,Win32Api.getTitle(Long.parseLong(value)));
+                    variableMap.put(target, Win32Api.getTitle(Long.parseLong(value)));
                     break;
                 case "win32_setTopMost":
                     Win32Api.setTopMost(Long.parseLong(target));
                     break;
                 case "win32_showWindow":
-                    if(value.equals("normal")){
+                    if (value.equals("normal")) {
                         value = "1";
-                    }else if(value.equals("min")){
+                    } else if (value.equals("min")) {
                         value = "2";
-                    }else if(value.equals("max")){
+                    } else if (value.equals("max")) {
                         value = "3";
                     }
                     Win32Api.showWindow(Long.parseLong(target), Integer.parseInt(value));
@@ -168,8 +168,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         statement = "var _$map = arguments[0];" + statement;
                         sqlStatement = (String) webDriver.executeScript(statement, variableMap);
                     }
-                    variableMap.put(target, SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap));
-
+                    List<Map<String, Object>> dataList = SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap);
+                    variableMap.put(target, dataList);
+                    System.err.println("返回记录数："+(dataList == null ? 0 : dataList.size()));
                     break;
                 case "execSql":
                     if (StringUtil.isNotEmpty(statement)) {
@@ -181,6 +182,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isNotEmpty(timeout)) {
                         variableMap.put(timeout, execResult.getPrimaryKey());
                     }
+                    System.err.println("受影响行数："+execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
                     break;
                 case "screenshot":
                     try {
