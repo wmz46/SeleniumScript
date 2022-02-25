@@ -5,7 +5,7 @@
  <dependency>
     <groupId>com.iceolive</groupId>
     <artifactId>selenium-script</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 ## 一、工具类介绍
