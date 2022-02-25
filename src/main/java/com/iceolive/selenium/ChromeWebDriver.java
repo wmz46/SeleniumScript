@@ -51,24 +51,35 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     Actions builder = null;
 
-    public ChromeWebDriver(String path) {
+    public ChromeWebDriver(String path, boolean headless) {
         File chromeDriverPath = new File(path);
         System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
         ChromeOptions chromeOptions = new ChromeOptions();
+        if (headless) {
+            chromeOptions.addArguments("headless");
+        }
+        //去除 window.navigator.webdriver
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+
         webDriver = new ChromeDriver(chromeOptions);
     }
 
-    public ChromeWebDriver(String path, BrowserMobProxy browserMobProxy) {
+    public ChromeWebDriver(String path, boolean headless, BrowserMobProxy browserMobProxy) {
         this.proxy = browserMobProxy;
         proxy.enableHarCaptureTypes(CaptureType.REQUEST_HEADERS, CaptureType.REQUEST_CONTENT, CaptureType.REQUEST_BINARY_CONTENT, CaptureType.REQUEST_COOKIES, CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT, CaptureType.RESPONSE_BINARY_CONTENT, CaptureType.RESPONSE_COOKIES);
         Proxy seleniumProxy = ClientUtil.createSeleniumProxy(browserMobProxy);
         File chromeDriverPath = new File(path);
         System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
         ChromeOptions chromeOptions = new ChromeOptions();
+        if (headless) {
+            chromeOptions.addArguments("headless");
+        }
         chromeOptions.setProxy(seleniumProxy);
+        //去除 window.navigator.webdriver
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+        //忽略证书错误
         chromeOptions.addArguments("ignore-certificate-errors");
+        //忽略证书访问
         chromeOptions.addArguments("ignore-urlfetcher-cert-requests");
         webDriver = new ChromeDriver(chromeOptions);
 
@@ -111,9 +122,21 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String password = replaceVariable(item.getArg4());
             String statement = item.getStatement();
             String sqlStatement = item.getSqlStatement();
-            System.err.println(new Date().toString() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
+            System.err.println(new Date() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
 
             switch (command) {
+                case "newStw":
+                    variableMap.put(target, System.currentTimeMillis());
+                    break;
+                case "endStw":
+                    long endTime = System.currentTimeMillis();
+                    if (variableMap.containsKey(target)) {
+                        long startTime = (long) variableMap.get(target);
+                        variableMap.put(target, endTime - startTime);
+                    } else {
+                        variableMap.put(target, 0L);
+                    }
+                    break;
                 case "win32_getByTitle":
                     variableMap.put(target, Win32Api.getByTitle(value));
                     break;
@@ -170,7 +193,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     }
                     List<Map<String, Object>> dataList = SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap);
                     variableMap.put(target, dataList);
-                    System.err.println("返回记录数："+(dataList == null ? 0 : dataList.size()));
+                    System.err.println("返回记录数：" + (dataList == null ? 0 : dataList.size()));
                     break;
                 case "execSql":
                     if (StringUtil.isNotEmpty(statement)) {
@@ -182,7 +205,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isNotEmpty(timeout)) {
                         variableMap.put(timeout, execResult.getPrimaryKey());
                     }
-                    System.err.println("受影响行数："+execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
+                    System.err.println("受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
                     break;
                 case "screenshot":
                     try {

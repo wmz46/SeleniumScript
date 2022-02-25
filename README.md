@@ -426,3 +426,16 @@ win32_getDesktop hwnd
 //根据窗口句柄截图并保存
 win32_screenshot 134642 1.jpg
 ```
+### 33.无浏览器窗口模式
+启动时检查如果存在以下指令则启动无浏览器窗口模式
+```js
+#headless
+```
+### 34.计时器
+StopWatch的缩写
+```js
+//开始计时,此时a存储的是当前的时间戳(long)
+newStw a
+//结束计时，此时a存储的是时间差，单位毫秒(long)
+endStw a
+```

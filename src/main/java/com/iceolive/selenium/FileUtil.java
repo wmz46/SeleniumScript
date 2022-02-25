@@ -18,6 +18,10 @@ public class FileUtil {
                 bufferedReader = new BufferedReader(inputStreamReader);
                 String txt = null;
                 while ((txt = bufferedReader.readLine()) != null) {
+                    // UTF-8 byte order mark (EF BB BF)
+                    if (txt.startsWith("\uFEFF")) {
+                        txt = txt.substring(1);
+                    }
                     sb.append(txt + "\n");
                 }
                 bufferedReader.close();

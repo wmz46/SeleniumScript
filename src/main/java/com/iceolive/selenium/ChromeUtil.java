@@ -184,8 +184,8 @@ public class ChromeUtil {
 
     public static void runScript(String script, String driver, String proxy) throws IOException {
         boolean enableMob = Arrays.stream(script.split("\n")).filter(m -> m.trim().startsWith("newHar")).count() > 0;
+        boolean headless = Arrays.stream(script.split("\n")).filter(m -> m.trim().startsWith("#headless")).count() > 0;
 
-        String finalProxy = proxy;
         BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
         if (proxy != null) {
             InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
@@ -197,18 +197,18 @@ public class ChromeUtil {
         ChromeWebDriver webDriver;
         try {
             if (enableMob) {
-                webDriver = new ChromeWebDriver(driver, browserMobProxy);
+                webDriver = new ChromeWebDriver(driver,headless, browserMobProxy);
             } else {
-                webDriver = new ChromeWebDriver(driver);
+                webDriver = new ChromeWebDriver(driver,headless);
             }
         } catch (Exception e) {
             if (e.getMessage().contains("only supports Chrome version")) {
                 System.out.println("chromedriver版本不匹配！");
                 downloadAndUnzip();
                 if (enableMob) {
-                    webDriver = new ChromeWebDriver(driver, browserMobProxy);
+                    webDriver = new ChromeWebDriver(driver,headless, browserMobProxy);
                 } else {
-                    webDriver = new ChromeWebDriver(driver);
+                    webDriver = new ChromeWebDriver(driver,headless);
                 }
             } else {
                 throw e;

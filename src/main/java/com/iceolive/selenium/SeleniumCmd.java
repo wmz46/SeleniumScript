@@ -65,10 +65,6 @@ public class SeleniumCmd {
         if (Pattern.matches("^\\s*//.*?", line)) {
             return;
         }
-        // UTF-8 byte order mark (EF BB BF)
-        if (line.startsWith("\uFEFF")) {
-            line = line.substring(1);
-        }
         Pattern pattern = Pattern.compile("^\\s*([^\\s]+)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)(\\s+(('(.*?)')|([^\\s]+))|)");
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {
