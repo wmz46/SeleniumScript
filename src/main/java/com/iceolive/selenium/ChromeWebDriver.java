@@ -124,7 +124,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String password = replaceVariable(item.getArg4());
             String statement = item.getStatement();
             String sqlStatement = item.getSqlStatement();
-            log.info(item.toString().trim());
+            log.info(item.toString());
 
             switch (command) {
                 case "newStw":
@@ -135,7 +135,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (variableMap.containsKey(target)) {
                         long startTime = (long) variableMap.get(target);
                         variableMap.put(target, endTime - startTime);
-                        log.info("-> "+target+"耗时"+(endTime-startTime)+"毫秒");
+                        log.info("      -> " + target + "耗时" + (endTime - startTime) + "毫秒");
                     } else {
                         variableMap.put(target, 0L);
                     }
@@ -196,7 +196,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     }
                     List<Map<String, Object>> dataList = SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap);
                     variableMap.put(target, dataList);
-                    log.info("-> 返回记录数：" + (dataList == null ? 0 : dataList.size()));
+                    log.info("      -> 返回记录数：" + (dataList == null ? 0 : dataList.size()));
                     break;
                 case "execSql":
                     if (StringUtil.isNotEmpty(statement)) {
@@ -208,7 +208,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isNotEmpty(timeout)) {
                         variableMap.put(timeout, execResult.getPrimaryKey());
                     }
-                    log.info("-> 受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
+                    log.info("      -> 受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
                     break;
                 case "screenshot":
                     try {
@@ -259,7 +259,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         statement = "var _$map = arguments[0];" + statement;
                         obj = webDriver.executeScript(statement, variableMap);
                     }
-                    log.info("-> " + obj);
+                    log.info("      -> " + obj);
                     variableMap.put(target, obj);
                     break;
                 case "alert":
@@ -393,7 +393,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "log":
                     //输出日志
-                    log.info("-> " + target);
+                    log.info("      -> " + target);
                     break;
                 case "stop":
                     //终止
@@ -443,7 +443,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "loadExcel":
                     List<Map<String, String>> mapList = ExcelUtil.excel2List(target);
-                    log.info("-> 加载记录数：" + mapList.size());
+                    log.info("      -> 加载记录数：" + mapList.size());
                     variableMap.put(value, mapList);
                     break;
                 case "prompt":
@@ -477,7 +477,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     String img2 = timeout;
                     Integer distance1 = ImageUtil.getDistance(img1, img2);
                     variableMap.put(target, distance1);
-                    log.info("-> 偏移量：" + distance1);
+                    log.info("      -> 偏移量：" + distance1);
                     break;
                 case "slowDrag":
                     WebElement element1 = webDriver.findElement(By.cssSelector(target));
@@ -531,11 +531,11 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         return variableMap.get(key);
     }
 
-    private List<SeleniumCmd> parse(String[] lines) {
+    private List<SeleniumCmd> parse(String[] lines, int startLineNum) {
         List<SeleniumCmd> list = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
-            SeleniumCmd seleniumCmd = new SeleniumCmd(line);
+            SeleniumCmd seleniumCmd = new SeleniumCmd(line, i + startLineNum+1);
             if (seleniumCmd.isWaitCmd() || seleniumCmd.isPromptCmd()) {
                 if (i + 1 < lines.length && "then".equals(lines[i + 1].trim())) {
                     //如果wait下一行是then，则需要设置then和else
@@ -565,14 +565,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         if (elseLineNum != null) {
                             String[] elseLines = new String[endLineNum - elseLineNum - 1];
                             System.arraycopy(lines, elseLineNum + 1, elseLines, 0, endLineNum - elseLineNum - 1);
-                            seleniumCmd.setElseCommands(parse(elseLines));
+                            seleniumCmd.setElseCommands(parse(elseLines, elseLineNum + 1));
                             String[] thenLines = new String[elseLineNum - thenLineNum - 1];
                             System.arraycopy(lines, thenLineNum + 1, thenLines, 0, elseLineNum - thenLineNum - 1);
-                            seleniumCmd.setThenCommands(parse(thenLines));
+                            seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
                         } else {
                             String[] thenLines = new String[endLineNum - thenLineNum - 1];
                             System.arraycopy(lines, thenLineNum + 1, thenLines, 0, endLineNum - thenLineNum - 1);
-                            seleniumCmd.setThenCommands(parse(thenLines));
+                            seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
                         }
                     }
                     list.add(seleniumCmd);
@@ -620,14 +620,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             if (elseLineNum != null) {
                                 String[] elseLines = new String[endLineNum - elseLineNum - 1];
                                 System.arraycopy(lines, elseLineNum + 1, elseLines, 0, endLineNum - elseLineNum - 1);
-                                seleniumCmd.setElseCommands(parse(elseLines));
+                                seleniumCmd.setElseCommands(parse(elseLines, elseLineNum + 1));
                                 String[] thenLines = new String[elseLineNum - thenLineNum - 1];
                                 System.arraycopy(lines, thenLineNum + 1, thenLines, 0, elseLineNum - thenLineNum - 1);
-                                seleniumCmd.setThenCommands(parse(thenLines));
+                                seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
                             } else {
                                 String[] thenLines = new String[endLineNum - thenLineNum - 1];
                                 System.arraycopy(lines, thenLineNum + 1, thenLines, 0, endLineNum - thenLineNum - 1);
-                                seleniumCmd.setThenCommands(parse(thenLines));
+                                seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
                             }
                         }
                         i = endLineNum;
@@ -669,7 +669,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     String[] repeatLines = new String[endLineNum - beginLineNum - 1];
                     System.arraycopy(lines, beginLineNum + 1, repeatLines, 0, endLineNum - beginLineNum - 1);
 
-                    seleniumCmd.setRepeatCommands(parse(repeatLines));
+                    seleniumCmd.setRepeatCommands(parse(repeatLines, beginLineNum + 1));
                 }
                 list.add(seleniumCmd);
             } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd() || seleniumCmd.isWinCmd()) {
@@ -732,14 +732,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     public void run(String cmd) {
         if (cmd != null) {
             String[] lines = cmd.split("\n");
-            //清理注释和空行
-            List<String> cmds = new ArrayList<>();
-            for (String line : lines) {
-                if (!Pattern.matches("^\\s*//.*?", line) && !"".equals(line.trim())) {
-                    cmds.add(line);
-                }
-            }
-            List<SeleniumCmd> list = parse(cmds.toArray(new String[0]));
+            List<SeleniumCmd> list = parse(lines, 0);
             run(list);
         }
     }
@@ -774,7 +767,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         Thread t1 = new Thread(() -> {
             if (cmd != null) {
                 String[] lines = cmd.split("\n");
-                List<SeleniumCmd> list = parse(lines);
+                List<SeleniumCmd> list = parse(lines, 0);
                 try {
                     run(list);
                     callback.accept(true, null);

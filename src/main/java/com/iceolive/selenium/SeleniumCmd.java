@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
  */
 @Data
 public class SeleniumCmd {
+    private int lineNum;
     private String command;
     private String arg1;
     private String arg2;
@@ -34,7 +35,8 @@ public class SeleniumCmd {
     public boolean isExecCmd() {
         return "exec".equals(this.command) || "execAsync".equals(this.command);
     }
-    public boolean isWinCmd(){
+
+    public boolean isWinCmd() {
         return "cmd".equals(this.command);
     }
 
@@ -45,10 +47,12 @@ public class SeleniumCmd {
     public boolean isRepeatCmd() {
         return "repeat".equals(this.command);
     }
-    public boolean isQuerySql(){
+
+    public boolean isQuerySql() {
         return "querySql".equals(this.command);
     }
-    public boolean isExecSql(){
+
+    public boolean isExecSql() {
         return "execSql".equals(this.command);
     }
 
@@ -60,8 +64,9 @@ public class SeleniumCmd {
         return "prompt".equals(this.command);
     }
 
-    public SeleniumCmd(String line) {
+    public SeleniumCmd(String line, int lineNum) {
         this.line = line;
+        this.lineNum = lineNum;
         if (Pattern.matches("^\\s*//.*?", line)) {
             return;
         }
@@ -71,35 +76,35 @@ public class SeleniumCmd {
             this.command = matcher.group(1);
             int g = 5;
             int i = 1;
-            if (matcher.groupCount() > g*i) {
-                if (matcher.group(g*i+1) == null) {
-                    this.arg1 = matcher.group(g*i);
+            if (matcher.groupCount() > g * i) {
+                if (matcher.group(g * i + 1) == null) {
+                    this.arg1 = matcher.group(g * i);
                 } else {
-                    this.arg1 = matcher.group(g*i+1);
+                    this.arg1 = matcher.group(g * i + 1);
                 }
             }
             i++;
-            if (matcher.groupCount() > g*i) {
-                if (matcher.group(g*i+1) == null) {
-                    this.arg2 = matcher.group(g*i);
+            if (matcher.groupCount() > g * i) {
+                if (matcher.group(g * i + 1) == null) {
+                    this.arg2 = matcher.group(g * i);
                 } else {
-                    this.arg2 = matcher.group(g*i+1);
+                    this.arg2 = matcher.group(g * i + 1);
                 }
             }
             i++;
-            if (matcher.groupCount() > g*i) {
-                if (matcher.group(g*i+1) == null) {
-                    this.arg3 = matcher.group(g*i);
+            if (matcher.groupCount() > g * i) {
+                if (matcher.group(g * i + 1) == null) {
+                    this.arg3 = matcher.group(g * i);
                 } else {
-                    this.arg3 = matcher.group(g*i+1);
+                    this.arg3 = matcher.group(g * i + 1);
                 }
             }
             i++;
-            if (matcher.groupCount() > g*i) {
-                if (matcher.group(g*i+1) == null) {
-                    this.arg4 = matcher.group(g*i);
+            if (matcher.groupCount() > g * i) {
+                if (matcher.group(g * i + 1) == null) {
+                    this.arg4 = matcher.group(g * i);
                 } else {
-                    this.arg4 = matcher.group(g*i+1);
+                    this.arg4 = matcher.group(g * i + 1);
                 }
             }
         }
@@ -107,6 +112,10 @@ public class SeleniumCmd {
 
     @Override
     public String toString() {
-        return this.line;
+        String ln = String.valueOf(this.lineNum);
+        while (ln.length() < 4) {
+            ln += " ";
+        }
+        return "#" + ln + " " + this.line.trim();
     }
 }
