@@ -3,6 +3,7 @@ package com.iceolive.selenium;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.lowagie.text.pdf.codec.Base64;
+import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * @author wangmianzhe
  */
+@Slf4j
 public class ChromeServer extends WebSocketServer {
     private Integer port;
 
@@ -24,12 +26,12 @@ public class ChromeServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
-        System.out.println(webSocket.getRemoteSocketAddress() + "建立连接");
+        log.info(webSocket.getRemoteSocketAddress() + "建立连接");
     }
 
     @Override
     public void onClose(WebSocket webSocket, int i, String s, boolean b) {
-        System.out.println(webSocket.getRemoteSocketAddress() + "断开连接");
+        log.info(webSocket.getRemoteSocketAddress() + "断开连接");
     }
 
     @Override
@@ -53,7 +55,7 @@ public class ChromeServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        System.out.println("本地服务启动成功 端口：" + this.port + "  当前版本："+VersionUtil.getVersion());
+        log.info("本地服务启动成功 端口：" + this.port + "  当前版本："+VersionUtil.getVersion());
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
     }

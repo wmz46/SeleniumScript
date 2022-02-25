@@ -1,6 +1,7 @@
 package com.iceolive.selenium;
 
 
+import lombok.extern.slf4j.Slf4j;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import okhttp3.OkHttpClient;
@@ -17,6 +18,7 @@ import java.util.zip.ZipFile;
 /**
  * @author wangmianzhe
  */
+@Slf4j
 public class ChromeUtil {
     private static OkHttpClient client = new OkHttpClient();
 
@@ -42,7 +44,7 @@ public class ChromeUtil {
 
     public static void unzip(File file, String destDirPath) throws IOException {
 
-        System.out.println("开始解压文件...");
+        log.info("开始解压文件...");
         ZipFile zipFile = new ZipFile(file);
         Enumeration<?> entries = zipFile.entries();
 
@@ -103,7 +105,7 @@ public class ChromeUtil {
         String domain = chromeDriverDomain2;
         String version = getVersion();
         if (version == null) {
-            System.out.println("请先安装chrome浏览器");
+            log.error("请先安装chrome浏览器");
         }
         version = version.split("\\.")[0];
         Request request;
@@ -127,7 +129,7 @@ public class ChromeUtil {
         }
         String fullVersion = response.body().string();
         String downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
-        System.out.println("开始下载chromedriver...");
+        log.info("开始下载chromedriver...");
         request = new Request.Builder().url(downloadUrl).build();
         response = client.newCall(request).execute();
         InputStream is;
@@ -177,6 +179,7 @@ public class ChromeUtil {
             ChromeServer chromeServer = new ChromeServer(port);
             chromeServer.start();
         } else {
+            log.info("当前版本："+VersionUtil.getVersion());
             String s = FileUtil.readFromFile(script, "utf-8");
             runScript(s, driver, proxy);
         }
@@ -203,7 +206,7 @@ public class ChromeUtil {
             }
         } catch (Exception e) {
             if (e.getMessage().contains("only supports Chrome version")) {
-                System.out.println("chromedriver版本不匹配！");
+                log.error("chromedriver版本不匹配！");
                 downloadAndUnzip();
                 if (enableMob) {
                     webDriver = new ChromeWebDriver(driver,headless, browserMobProxy);
@@ -225,9 +228,9 @@ public class ChromeUtil {
             webDriver.run(script);
             //打印所有的变量
 //            System.out.println(webDriver.getVariableMap());
-            System.out.println("执行完毕");
+            log.info("执行完毕");
         } catch (Exception e) {
-            System.out.println("执行出错:" + e.toString());
+            log.error("执行出错:" + e.toString());
         }
     }
 
