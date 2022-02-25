@@ -7,6 +7,7 @@ import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
 import com.lowagie.text.pdf.PdfWriter;
+import lombok.extern.slf4j.Slf4j;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.client.ClientUtil;
 import net.lightbody.bmp.core.har.Har;
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 /**
  * @author wangmianzhe
  */
+@Slf4j
 public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScreenshot, Interactive, HasCapabilities {
 
     private ChromeDriver webDriver;
@@ -122,7 +124,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String password = replaceVariable(item.getArg4());
             String statement = item.getStatement();
             String sqlStatement = item.getSqlStatement();
-            System.err.println(new Date() + "     " + MessageFormat.format("{0} {1} {2}", command, target == null ? "" : target, value == null ? "" : value));
+            log.info(item.toString().trim());
 
             switch (command) {
                 case "newStw":
@@ -133,6 +135,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (variableMap.containsKey(target)) {
                         long startTime = (long) variableMap.get(target);
                         variableMap.put(target, endTime - startTime);
+                        log.info("-> "+target+"耗时"+(endTime-startTime)+"毫秒");
                     } else {
                         variableMap.put(target, 0L);
                     }
@@ -193,7 +196,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     }
                     List<Map<String, Object>> dataList = SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap);
                     variableMap.put(target, dataList);
-                    System.err.println("返回记录数：" + (dataList == null ? 0 : dataList.size()));
+                    log.info("-> 返回记录数：" + (dataList == null ? 0 : dataList.size()));
                     break;
                 case "execSql":
                     if (StringUtil.isNotEmpty(statement)) {
@@ -205,7 +208,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isNotEmpty(timeout)) {
                         variableMap.put(timeout, execResult.getPrimaryKey());
                     }
-                    System.err.println("受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
+                    log.info("-> 受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
                     break;
                 case "screenshot":
                     try {
@@ -239,7 +242,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
                             webDriver.manage().window().setSize(originalSize);
                         } else {
-                            System.err.println("元素不可见，无法截图：" + item.toString());
+                            log.error("元素不可见，无法截图：" + item.toString());
                         }
 
                     } catch (IOException | BadElementException e) {
@@ -256,7 +259,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         statement = "var _$map = arguments[0];" + statement;
                         obj = webDriver.executeScript(statement, variableMap);
                     }
-                    System.err.println(obj);
+                    log.info("-> " + obj);
                     variableMap.put(target, obj);
                     break;
                 case "alert":
@@ -337,7 +340,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                                     break;
                                 }
                             } else {
-                                System.out.println("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
+                                log.error("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
                                 break;
                             }
                             if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
@@ -379,7 +382,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
                             run(item.getElseCommands());
                         }
-                        System.out.println("wait超时:" + item.toString());
+                        log.error("wait超时:" + item);
                     }
                     break;
                 case "saveJson":
@@ -390,7 +393,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "log":
                     //输出日志
-                    System.out.println(new Date().toString() + "     " + target);
+                    log.info("-> " + target);
                     break;
                 case "stop":
                     //终止
@@ -440,7 +443,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     break;
                 case "loadExcel":
                     List<Map<String, String>> mapList = ExcelUtil.excel2List(target);
-                    System.err.println(mapList);
+                    log.info("-> 加载记录数：" + mapList.size());
                     variableMap.put(value, mapList);
                     break;
                 case "prompt":
@@ -460,7 +463,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
                             run(item.getElseCommands());
                         }
-                        System.out.println("prompt超时");
+                        log.error("prompt超时");
                     }
                     break;
                 case "resize":
@@ -474,7 +477,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     String img2 = timeout;
                     Integer distance1 = ImageUtil.getDistance(img1, img2);
                     variableMap.put(target, distance1);
-                    System.out.println(distance1);
+                    log.info("-> 偏移量：" + distance1);
                     break;
                 case "slowDrag":
                     WebElement element1 = webDriver.findElement(By.cssSelector(target));
