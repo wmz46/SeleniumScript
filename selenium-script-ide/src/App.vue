@@ -5,7 +5,7 @@ import IDE from './components/IDE/index.vue'
 </script>
 
 <template>
-  <IDE />
+  <IDE height="calc(100vh - 50px)"/>
 </template>
 
 <style>
