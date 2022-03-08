@@ -92,7 +92,21 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
   };
 
 });
-
+const getAllVariables = (editor,endLine)=>{
+    const list = []
+    for (let i = endLine - 1; i >= 0; i--) {
+      let line = editor.getLine(i)
+      let variable = line.match(/^\s*(set|setAsync|endHar|endStw|newStw|querySql|execSql|win32_getByTitle|win32_getAllByPID|win32_getChildren|win32_getPID|win32_getDesktop)\s+([^\s]*)\s*/)?.[2]
+      if (variable) {
+        list.push(variable)
+      }
+      variable = line.match(/^\s*execSql\s+[^\s]+\s+[^\s]+\s+([^\s+]+)/)?.[1]
+      if (variable) {
+        list.push(variable)
+      }
+    }
+    return list
+}
 CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
 
   const cursor = editor.getCursor();
@@ -130,7 +144,7 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         'setConn', 'querySql', 'execSql', 'cmd', '#headless', 'newStw', 'endStw',
         'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
         'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot'
-        ]
+      ]
       return { list: list.filter(m => m.toLowerCase().indexOf(str.toLowerCase()) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
     } else {
       //开始标签
@@ -140,7 +154,33 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         const list = ['<script>', '<sql>']
         return { list: list.filter(m => m.toLowerCase().indexOf(str.toLowerCase()) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
       } else {
-        return null;
+        //变量
+        let str = line.substring(0, end).match(/(%[^\s%]*)$/)?.[1]
+        if (str) {
+          const list = getAllVariables(editor,cursor.line)
+          for(let i = 0;i<list.length;i++){
+            list[i] = "%"+list[i]+"%"
+          }
+          const start = end - str.length;
+          return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+        } else {
+          let str = line.substring(0, end).match(/^\s*(querySql|execSql)\s*[^\s]+\s+$/)
+          if (str) {
+            const list = [];
+            const start = end;
+            for (let i = cursor.line - 1; i >= 0; i--) {
+              let line = editor.getLine(i)
+              let variable = line.match(/^\s*setConn\s+([^\s]*)\s*/)?.[1]
+              if (variable) {
+                list.push(variable)
+              }
+            }
+            return { list: list, from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+          }
+
+
+          return null;
+        }
       }
     }
   } else {
@@ -148,15 +188,34 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
     let str = line.substring(0, end).match(/^((<|<\/)[a-zA-Z]*)$/)?.[1]
     if (str) {
       const start = end - str.length;
-      if(tagType == 'script'){
-        return {list:['<\/script>'], from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-      }else if(tagType == 'sql'){
-        return {list:['<\/sql>'], from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-      }else{
+      if (tagType == 'script') {
+        return { list: ['<\/script>'], from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+      } else if (tagType == 'sql') {
+        return { list: ['<\/sql>'], from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+      } else {
         return null
       }
     } else {
-      return null;
+      if (tagType == 'script') {
+        let str = line.substring(0, end).match(/(_[\$a-z]*)$/)?.[1]
+        if (str) {
+          const start = end - str.length;
+          const list = ['_$cb', '_$map']
+          return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+        }else{
+          let match = line.substring(0,end).match(/_\$map\.([^\s])*$/)
+          if(match){
+            let str = match?.[1] || ''
+            const list = getAllVariables(editor,cursor.line)
+            const start = end - str.length;
+            return { list: list.filter(m => str.length == 0 || m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+          }else{
+            return null;
+          }
+        }
+      }else{
+        return null;
+      }
     }
 
   }
