@@ -415,6 +415,7 @@ wscript
 <script>
     WScript.Echo("_$map.a") 
 </script>
+```
 ### 33.win32
 ```js
 //根据窗口标题查找窗口句柄(long)，并存储到第二个参数设置的key中。
