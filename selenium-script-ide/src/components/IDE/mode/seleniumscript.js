@@ -96,7 +96,7 @@ const getAllVariables = (editor, endLine) => {
   const list = []
   for (let i = endLine - 1; i >= 0; i--) {
     let line = editor.getLine(i)
-    let variable = line.match(/^\s*(set|wsh|cmd|setAsync|endHar|endStw|newStw|querySql|execSql|win32_getByTitle|win32_getAllByPID|win32_getChildren|win32_getPID|win32_getDesktop)\s+([^\s]*)\s*/)?.[2]
+    let variable = line.match(/^\s*(set|wscript|cmd|setAsync|endHar|endStw|newStw|querySql|execSql|win32_getByTitle|win32_getAllByPID|win32_getChildren|win32_getPID|win32_getDesktop)\s+([^\s]*)\s*/)?.[2]
     if (variable) {
       list.push(variable)
     }
