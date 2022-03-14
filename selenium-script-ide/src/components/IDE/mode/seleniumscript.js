@@ -17,7 +17,7 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
   const list = ['open', 'type', 'clear', 'click', 'enter', 'drag', 'scroll', 'switch', 'exec', 'execAsync',
     'set', 'setAsync', 'sleep', 'wait', 'when', 'repeat', 'alert', 'saveCsv', 'saveJson',
     'log', 'screenshot', 'stop', 'keydown', 'newHar', 'endHar', 'maximize', 'loadExcel',
-    'setConn', 'querySql', 'execSql', 'cmd', '#headless', 'newStw', 'endStw',
+    'setConn', 'querySql', 'execSql', 'cmd', 'wsh', '#headless', 'newStw', 'endStw',
     'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
     'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot',
     'begin', 'then', 'else', 'end',
@@ -92,20 +92,20 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
   };
 
 });
-const getAllVariables = (editor,endLine)=>{
-    const list = []
-    for (let i = endLine - 1; i >= 0; i--) {
-      let line = editor.getLine(i)
-      let variable = line.match(/^\s*(set|setAsync|endHar|endStw|newStw|querySql|execSql|win32_getByTitle|win32_getAllByPID|win32_getChildren|win32_getPID|win32_getDesktop)\s+([^\s]*)\s*/)?.[2]
-      if (variable) {
-        list.push(variable)
-      }
-      variable = line.match(/^\s*execSql\s+[^\s]+\s+[^\s]+\s+([^\s+]+)/)?.[1]
-      if (variable) {
-        list.push(variable)
-      }
+const getAllVariables = (editor, endLine) => {
+  const list = []
+  for (let i = endLine - 1; i >= 0; i--) {
+    let line = editor.getLine(i)
+    let variable = line.match(/^\s*(set|wsh|cmd|setAsync|endHar|endStw|newStw|querySql|execSql|win32_getByTitle|win32_getAllByPID|win32_getChildren|win32_getPID|win32_getDesktop)\s+([^\s]*)\s*/)?.[2]
+    if (variable) {
+      list.push(variable)
     }
-    return list
+    variable = line.match(/^\s*execSql\s+[^\s]+\s+[^\s]+\s+([^\s+]+)/)?.[1]
+    if (variable) {
+      list.push(variable)
+    }
+  }
+  return list
 }
 CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
 
@@ -141,7 +141,7 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         'open', 'type', 'clear', 'click', 'enter', 'drag', 'scroll', 'switch', 'exec', 'execAsync',
         'set', 'setAsync', 'sleep', 'wait', 'when', 'repeat', 'alert', 'saveCsv', 'saveJson',
         'log', 'screenshot', 'stop', 'keydown', 'newHar', 'endHar', 'maximize', 'loadExcel',
-        'setConn', 'querySql', 'execSql', 'cmd', '#headless', 'newStw', 'endStw',
+        'setConn', 'querySql', 'execSql', 'cmd', 'wsh', '#headless', 'newStw', 'endStw',
         'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
         'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot'
       ]
@@ -157,9 +157,9 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         //变量
         let str = line.substring(0, end).match(/(%[^\s%]*)$/)?.[1]
         if (str) {
-          const list = getAllVariables(editor,cursor.line)
-          for(let i = 0;i<list.length;i++){
-            list[i] = "%"+list[i]+"%"
+          const list = getAllVariables(editor, cursor.line)
+          for (let i = 0; i < list.length; i++) {
+            list[i] = "%" + list[i] + "%"
           }
           const start = end - str.length;
           return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
@@ -202,18 +202,18 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
           const start = end - str.length;
           const list = ['_$cb', '_$map']
           return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-        }else{
-          let match = line.substring(0,end).match(/_\$map\.([^\s])*$/)
-          if(match){
+        } else {
+          let match = line.substring(0, end).match(/_\$map\.([^\s])*$/)
+          if (match) {
             let str = match?.[1] || ''
-            const list = getAllVariables(editor,cursor.line)
+            const list = getAllVariables(editor, cursor.line)
             const start = end - str.length;
             return { list: list.filter(m => str.length == 0 || m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-          }else{
+          } else {
             return null;
           }
         }
-      }else{
+      } else {
         return null;
       }
     }

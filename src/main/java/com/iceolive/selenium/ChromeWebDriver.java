@@ -125,391 +125,373 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String statement = item.getStatement();
             String sqlStatement = item.getSqlStatement();
             log.info(item.toString());
-
-            switch (command) {
-                case "newStw":
-                    variableMap.put(target, System.currentTimeMillis());
-                    break;
-                case "endStw":
-                    long endTime = System.currentTimeMillis();
-                    if (variableMap.containsKey(target)) {
-                        long startTime = (long) variableMap.get(target);
-                        variableMap.put(target, endTime - startTime);
-                        log.info("      -> " + target + "耗时" + (endTime - startTime) + "毫秒");
-                    } else {
-                        variableMap.put(target, 0L);
+            if ("newStw".equals(command)) {
+                variableMap.put(target, System.currentTimeMillis());
+            } else if ("endStw".equals(command)) {
+                long endTime = System.currentTimeMillis();
+                if (variableMap.containsKey(target)) {
+                    long startTime = (long) variableMap.get(target);
+                    variableMap.put(target, endTime - startTime);
+                    log.info("      -> " + target + "耗时" + (endTime - startTime) + "毫秒");
+                } else {
+                    variableMap.put(target, 0L);
+                }
+            } else if ("win32_getByTitle".equals(command)) {
+                variableMap.put(target, Win32Api.getByTitle(value));
+            } else if ("win32_getAllByPID".equals(command)) {
+                variableMap.put(target, Win32Api.getAllByPID(Integer.parseInt(value)));
+            } else if ("win32_getChildren".equals(command)) {
+                variableMap.put(target, Win32Api.getChildren(Long.parseLong(value)));
+            } else if ("win32_getTitle".equals(command)) {
+                variableMap.put(target, Win32Api.getTitle(Long.parseLong(value)));
+            } else if ("win32_setTopMost".equals(command)) {
+                Win32Api.setTopMost(Long.parseLong(target));
+            } else if ("win32_showWindow".equals(command)) {
+                if (value.equals("normal")) {
+                    value = "1";
+                } else if (value.equals("min")) {
+                    value = "2";
+                } else if (value.equals("max")) {
+                    value = "3";
+                }
+                Win32Api.showWindow(Long.parseLong(target), Integer.parseInt(value));
+            } else if ("win32_getPID".equals(command)) {
+                variableMap.put(target, Win32Api.getPID(Long.parseLong(value)));
+            } else if ("win32_getDesktop".equals(command)) {
+                variableMap.put(target, Win32Api.getDesktop());
+            } else if ("win32_screenshot".equals(command)) {
+                try {
+                    BufferedImage screenShot = Win32Api.getScreenShot(Long.parseLong(target));
+                    ImageIO.write(screenShot, "png", new File(value));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else if ("cmd".equals(command)) {
+                String filename = "cmd.bat";
+                String script = statement;
+                Matcher cmdMatcher = Pattern.compile("_\\$map\\.([_$a-zA-Z0-9]+)").matcher(statement);
+                while (cmdMatcher.find()) {
+                    String name = cmdMatcher.group(1);
+                    if (variableMap.containsKey(name)) {
+                        script = script.replaceAll("_\\$map\\.[_$a-zA-Z0-9]+", String.valueOf(variableMap.get(name)));
                     }
-                    break;
-                case "win32_getByTitle":
-                    variableMap.put(target, Win32Api.getByTitle(value));
-                    break;
-                case "win32_getAllByPID":
-                    variableMap.put(target, Win32Api.getAllByPID(Integer.parseInt(value)));
-                    break;
-                case "win32_getChildren":
-                    variableMap.put(target, Win32Api.getChildren(Long.parseLong(value)));
-                    break;
-                case "win32_getTitle":
-                    variableMap.put(target, Win32Api.getTitle(Long.parseLong(value)));
-                    break;
-                case "win32_setTopMost":
-                    Win32Api.setTopMost(Long.parseLong(target));
-                    break;
-                case "win32_showWindow":
-                    if (value.equals("normal")) {
-                        value = "1";
-                    } else if (value.equals("min")) {
-                        value = "2";
-                    } else if (value.equals("max")) {
-                        value = "3";
+                }
+                script = script.replace("\n", "\r\n");
+                FileUtil.writeToFile(filename, script, "GBK");
+                String s = CmdUtil.callCmd(filename);
+                if (StringUtil.isNotEmpty(target)) {
+                    variableMap.put(target, s);
+                }
+                new File(filename).delete();
+            } else if ("wscript".equals(command)) {
+                String filename = "wscript.js";
+                String script = statement;
+                Matcher cmdMatcher = Pattern.compile("_\\$map\\.([_$a-zA-Z0-9]+)").matcher(statement);
+                while (cmdMatcher.find()) {
+                    String name = cmdMatcher.group(1);
+                    if (variableMap.containsKey(name)) {
+                        script = script.replaceAll("_\\$map\\.[_$a-zA-Z0-9]+", String.valueOf(variableMap.get(name)));
                     }
-                    Win32Api.showWindow(Long.parseLong(target), Integer.parseInt(value));
-                    break;
-                case "win32_getPID":
-                    variableMap.put(target, Win32Api.getPID(Long.parseLong(value)));
-                    break;
-                case "win32_getDesktop":
-                    variableMap.put(target, Win32Api.getDesktop());
-                    break;
-                case "win32_screenshot":
-                    try {
-                        BufferedImage screenShot = Win32Api.getScreenShot(Long.parseLong(target));
-                        ImageIO.write(screenShot, "png", new File(value));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "cmd":
+                }
+                script = script.replace("\n", "\r\n");
+                FileUtil.writeToFile(filename, script, "GBK");
+                String s = CmdUtil.callCmd("wscript",filename);
+                if (StringUtil.isNotEmpty(target)) {
+                    variableMap.put(target, s);
+                }
+                new File(filename).delete();
+            } else if ("setConn".equals(command)) {
+                connectionMap.put(target, SqlUtil.getConnection(value, timeout, password));
+            } else if ("querySql".equals(command)) {
+                if (StringUtil.isNotEmpty(statement)) {
                     statement = "var _$map = arguments[0];" + statement;
-                    List<String> args = (List<String>) webDriver.executeScript(statement, variableMap);
-                    if (StringUtil.isNotEmpty(target)) {
-                        variableMap.put(target, CmdUtil.callCmd(args.toArray(new String[0])));
-                    }
-                    break;
-                case "setConn":
-                    connectionMap.put(target, SqlUtil.getConnection(value, timeout, password));
-                    break;
-                case "querySql":
-                    if (StringUtil.isNotEmpty(statement)) {
-                        statement = "var _$map = arguments[0];" + statement;
-                        sqlStatement = (String) webDriver.executeScript(statement, variableMap);
-                    }
-                    List<Map<String, Object>> dataList = SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap);
-                    variableMap.put(target, dataList);
-                    log.info("      -> 返回记录数：" + (dataList == null ? 0 : dataList.size()));
-                    break;
-                case "execSql":
-                    if (StringUtil.isNotEmpty(statement)) {
-                        statement = "var _$map = arguments[0];" + statement;
-                        sqlStatement = (String) webDriver.executeScript(statement, variableMap);
-                    }
-                    SqlUtil.ExecResult execResult = SqlUtil.execSql(connectionMap.get(value), sqlStatement, variableMap);
-                    variableMap.put(target, execResult.getCount());
-                    if (StringUtil.isNotEmpty(timeout)) {
-                        variableMap.put(timeout, execResult.getPrimaryKey());
-                    }
-                    log.info("      -> 受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
-                    break;
-                case "screenshot":
-                    try {
-                        WebElement element1 = webDriver.findElement(By.cssSelector(target));
-                        if (element1.isDisplayed()) {
-                            Long fullWidth = (long) webDriver.executeScript("return document.documentElement.scrollWidth");
-                            Long fullHeight = (long) webDriver.executeScript("return document.documentElement.scrollHeight");
-                            Dimension dimension = new Dimension(fullWidth.intValue(), fullHeight.intValue());
-                            Dimension originalSize = webDriver.manage().window().getSize();
-                            webDriver.manage().window().setSize(dimension);
-                            byte[] byteArray = webDriver.getScreenshotAs(OutputType.BYTES);
-                            ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
-                            BufferedImage img = ImageIO.read(bais);
-                            Rectangle rect = element1.getRect();
-                            //从元素左上角坐标开始，按照元素的高宽对img进行裁剪为符合需要的图片
-                            BufferedImage dest = img.getSubimage(rect.x, rect.y, rect.width, rect.height);
-                            if (value.endsWith(".pdf")) {
-                                com.lowagie.text.Rectangle rect2 = new com.lowagie.text.Rectangle(rect.x, rect.y, rect.width, rect.height);
-                                Document document = new Document(rect2, 0, 0, 0, 0);
-                                FileOutputStream fos = new FileOutputStream(new File(value));
-                                PdfWriter.getInstance(document, fos);
-                                document.open();
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ImageIO.write(dest, "png", baos);
-                                Image image = Image.getInstance(baos.toByteArray());
-                                document.add(image);
-                                document.close();
-                            } else {
-                                ImageIO.write(dest, "png", new File(value));
-                            }
-
-                            webDriver.manage().window().setSize(originalSize);
+                    sqlStatement = (String) webDriver.executeScript(statement, variableMap);
+                }
+                List<Map<String, Object>> dataList = SqlUtil.querySql(connectionMap.get(value), sqlStatement, variableMap);
+                variableMap.put(target, dataList);
+                log.info("      -> 返回记录数：" + (dataList == null ? 0 : dataList.size()));
+            } else if ("execSql".equals(command)) {
+                if (StringUtil.isNotEmpty(statement)) {
+                    statement = "var _$map = arguments[0];" + statement;
+                    sqlStatement = (String) webDriver.executeScript(statement, variableMap);
+                }
+                SqlUtil.ExecResult execResult = SqlUtil.execSql(connectionMap.get(value), sqlStatement, variableMap);
+                variableMap.put(target, execResult.getCount());
+                if (StringUtil.isNotEmpty(timeout)) {
+                    variableMap.put(timeout, execResult.getPrimaryKey());
+                }
+                log.info("      -> 受影响行数：" + execResult.getCount() + (execResult.getPrimaryKey() == null ? "" : " 数据主键：" + execResult.getPrimaryKey()));
+            } else if ("screenshot".equals(command)) {
+                try {
+                    WebElement element1 = webDriver.findElement(By.cssSelector(target));
+                    if (element1.isDisplayed()) {
+                        Long fullWidth = (long) webDriver.executeScript("return document.documentElement.scrollWidth");
+                        Long fullHeight = (long) webDriver.executeScript("return document.documentElement.scrollHeight");
+                        Dimension dimension = new Dimension(fullWidth.intValue(), fullHeight.intValue());
+                        Dimension originalSize = webDriver.manage().window().getSize();
+                        webDriver.manage().window().setSize(dimension);
+                        byte[] byteArray = webDriver.getScreenshotAs(OutputType.BYTES);
+                        ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
+                        BufferedImage img = ImageIO.read(bais);
+                        Rectangle rect = element1.getRect();
+                        //从元素左上角坐标开始，按照元素的高宽对img进行裁剪为符合需要的图片
+                        BufferedImage dest = img.getSubimage(rect.x, rect.y, rect.width, rect.height);
+                        if (value.endsWith(".pdf")) {
+                            com.lowagie.text.Rectangle rect2 = new com.lowagie.text.Rectangle(rect.x, rect.y, rect.width, rect.height);
+                            Document document = new Document(rect2, 0, 0, 0, 0);
+                            FileOutputStream fos = new FileOutputStream(new File(value));
+                            PdfWriter.getInstance(document, fos);
+                            document.open();
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            ImageIO.write(dest, "png", baos);
+                            Image image = Image.getInstance(baos.toByteArray());
+                            document.add(image);
+                            document.close();
                         } else {
-                            log.error("元素不可见，无法截图：" + item.toString());
+                            ImageIO.write(dest, "png", new File(value));
                         }
 
-                    } catch (IOException | BadElementException e) {
-                        e.printStackTrace();
-                    } catch (DocumentException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "set":
-                    Object obj = null;
-                    if (value != null) {
-                        obj = value;
+                        webDriver.manage().window().setSize(originalSize);
                     } else {
-                        statement = "var _$map = arguments[0];" + statement;
-                        obj = webDriver.executeScript(statement, variableMap);
+                        log.error("元素不可见，无法截图：" + item.toString());
                     }
-                    log.info("      -> " + obj);
-                    variableMap.put(target, obj);
-                    break;
-                case "alert":
-                    this.alert(target);
-                    break;
-                case "exec":
+
+                } catch (IOException | BadElementException e) {
+                    e.printStackTrace();
+                } catch (DocumentException e) {
+                    e.printStackTrace();
+                }
+            } else if ("set".equals(command)) {
+                Object obj = null;
+                if (value != null) {
+                    obj = value;
+                } else {
                     statement = "var _$map = arguments[0];" + statement;
-                    webDriver.executeScript(statement, variableMap);
-                    break;
-                case "execAsync":
-                    statement = "var _$map = arguments[0]; var _$cb = arguments[arguments.length - 1];" + statement;
-                    webDriver.executeAsyncScript(statement, variableMap);
-                    break;
-                case "setAsync":
-                    statement = "var _$map = arguments[0]; var _$cb = arguments[arguments.length - 1];" + statement;
-                    Object response = webDriver.executeAsyncScript(statement, variableMap);
-                    variableMap.put(target, response);
-                    break;
-                case "scroll":
-                    webDriver.executeScript("window.scrollBy(" + target + ");");
-                    break;
-                case "switch":
-                    if (target == null) {
-                        webDriver.switchTo().defaultContent();
-                    } else if (Pattern.matches("^\\d+$", target)) {
-                        webDriver.switchTo().frame(Integer.parseInt(target));
-                    } else if (target != null) {
-                        webDriver.switchTo().frame(target);
-                    }
-                    break;
-                case "sleep":
-                    try {
-                        Thread.sleep((long) (Float.parseFloat(target) * 1000));
-                    } catch (InterruptedException e) {
+                    obj = webDriver.executeScript(statement, variableMap);
+                }
+                log.info("      -> " + obj);
+                variableMap.put(target, obj);
+            } else if ("alert".equals(command)) {
+                this.alert(target);
+            } else if ("exec".equals(command)) {
+                statement = "var _$map = arguments[0];" + statement;
+                webDriver.executeScript(statement, variableMap);
+            } else if ("execAsync".equals(command)) {
+                statement = "var _$map = arguments[0]; var _$cb = arguments[arguments.length - 1];" + statement;
+                webDriver.executeAsyncScript(statement, variableMap);
+            } else if ("setAsync".equals(command)) {
+                statement = "var _$map = arguments[0]; var _$cb = arguments[arguments.length - 1];" + statement;
+                Object response = webDriver.executeAsyncScript(statement, variableMap);
+                variableMap.put(target, response);
+            } else if ("scroll".equals(command)) {
+                webDriver.executeScript("window.scrollBy(" + target + ");");
+            } else if ("switch".equals(command)) {
+                if (target == null) {
+                    webDriver.switchTo().defaultContent();
+                } else if (Pattern.matches("^\\d+$", target)) {
+                    webDriver.switchTo().frame(Integer.parseInt(target));
+                } else if (target != null) {
+                    webDriver.switchTo().frame(target);
+                }
+            } else if ("sleep".equals(command)) {
+                try {
+                    Thread.sleep((long) (Float.parseFloat(target) * 1000));
+                } catch (InterruptedException e) {
 
-                    }
-                    break;
-                case "open":
-                    webDriver.get(target);
-                    break;
-                case "clear":
-                    webDriver.findElement(By.cssSelector(target)).clear();
-                    break;
-                case "type":
-                    webDriver.findElement(By.cssSelector(target)).sendKeys(value);
-                    break;
-                case "enter":
-                    webDriver.findElement(By.cssSelector(target)).sendKeys(Keys.ENTER);
-                    break;
-                case "click":
-                    webDriver.findElement(By.cssSelector(target)).click();
-                    break;
-                case "drag":
-                    WebElement element = webDriver.findElement(By.cssSelector(target));
-                    builder = new Actions(webDriver);
-                    builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
-                    break;
-                case "repeat":
-                    if (target != null) {
-                        int count = Integer.parseInt(target);
-                        while (count > 0) {
-                            if (item.getStatement() != null) {
-                                String statement1 = "var _$map = arguments[0];" + item.getStatement();
-                                if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
-                                    break;
-                                }
-                            }
-                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
-                                run(item.getRepeatCommands());
-                            }
-                            count--;
-                        }
-                    } else {
-                        while (true) {
-                            if (item.getStatement() != null) {
-                                String statement1 = "var _$map = arguments[0];" + item.getStatement();
-                                if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
-                                    break;
-                                }
-                            } else {
-                                log.error("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
+                }
+            } else if ("open".equals(command)) {
+                webDriver.get(target);
+            } else if ("clear".equals(command)) {
+                webDriver.findElement(By.cssSelector(target)).clear();
+            } else if ("type".equals(command)) {
+                webDriver.findElement(By.cssSelector(target)).sendKeys(value);
+            } else if ("enter".equals(command)) {
+                webDriver.findElement(By.cssSelector(target)).sendKeys(Keys.ENTER);
+            } else if ("click".equals(command)) {
+                webDriver.findElement(By.cssSelector(target)).click();
+            } else if ("drag".equals(command)) {
+                WebElement element = webDriver.findElement(By.cssSelector(target));
+                builder = new Actions(webDriver);
+                builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
+            } else if ("repeat".equals(command)) {
+                if (target != null) {
+                    int count = Integer.parseInt(target);
+                    while (count > 0) {
+                        if (item.getStatement() != null) {
+                            String statement1 = "var _$map = arguments[0];" + item.getStatement();
+                            if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
                                 break;
                             }
-                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
-                                run(item.getRepeatCommands());
+                        }
+                        if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                            run(item.getRepeatCommands());
+                        }
+                        count--;
+                    }
+                } else {
+                    while (true) {
+                        if (item.getStatement() != null) {
+                            String statement1 = "var _$map = arguments[0];" + item.getStatement();
+                            if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
+                                break;
                             }
+                        } else {
+                            log.error("repeat未设置最大循环次数，也未设置<script></script>,循环不执行");
+                            break;
+                        }
+                        if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                            run(item.getRepeatCommands());
                         }
                     }
+                }
 
-                    break;
-                case "when":
-                    statement = "var _$map = arguments[0];" + statement;
-                    if ((Boolean) webDriver.executeScript(statement, variableMap)) {
-                        if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
-                            run(item.getThenCommands());
-                        }
-                    } else {
-                        if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
-                            run(item.getElseCommands());
-                        }
+            } else if ("setConn".equals(command)) {
+
+            } else if ("when".equals(command)) {
+                statement = "var _$map = arguments[0];" + statement;
+                if ((Boolean) webDriver.executeScript(statement, variableMap)) {
+                    if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
+                        run(item.getThenCommands());
                     }
-                    break;
-                case "wait":
-                    try {
-                        if (StringUtil.isEmpty(timeout)) {
-                            timeout = "3";
-                        }
-                        WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
-                        if ("visible".equals(value)) {
-                            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
-                        } else if ("url".equals(value)) {
-                            wait.until(ExpectedConditions.urlMatches(target));
-                        } else if ("invisible".equals(value)) {
-                            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(target)));
-                        }
-                        if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
-                            run(item.getThenCommands());
-                        }
-                    } catch (TimeoutException e) {
-                        if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
-                            run(item.getElseCommands());
-                        }
-                        log.error("wait超时:" + item);
+                } else {
+                    if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
+                        run(item.getElseCommands());
                     }
-                    break;
-                case "saveJson":
-                    download(target, value, "json");
-                    break;
-                case "saveCsv":
-                    download(target, value, "csv");
-                    break;
-                case "log":
-                    //输出日志
-                    log.info("      -> " + target);
-                    break;
-                case "stop":
-                    //终止
-                    stop = true;
-                    break;
-                case "keydown":
-                    Actions actions = new Actions(webDriver);
-                    switch (target.toLowerCase()) {
-                        case "end":
-                            actions.sendKeys(Keys.END).perform();
-                            break;
-                        case "home":
-                            actions.sendKeys(Keys.HOME).perform();
-                            break;
-                        case "f5":
-                            actions.sendKeys(Keys.F5).perform();
-                            break;
-                    }
-                    break;
-                case "newHar":
-                    if (this.proxy != null) {
-                        proxy.newHar();
-                    }
-                    break;
-                case "endHar":
-                    if (this.proxy != null && target != null) {
-                        Har har = proxy.endHar();
-                        List<Map<String, String>> requests = new ArrayList();
-                        for (HarEntry entry : har.getLog().getEntries()) {
-                            String method = entry.getRequest().getMethod();
-                            if (method.equals("OPTIONS")) {
-                                continue;
-                            }
-                            String url = entry.getRequest().getUrl();
-                            String content = entry.getResponse().getContent().getText();
-                            Map<String, String> map = new HashMap<>();
-                            map.put("url", url);
-                            map.put("method", method);
-                            map.put("content", content);
-                            requests.add(map);
-                        }
-                        variableMap.put(target, requests);
-                    }
-                    break;
-                case "maximize":
-                    webDriver.manage().window().maximize();
-                    break;
-                case "loadExcel":
-                    List<Map<String, String>> mapList = ExcelUtil.excel2List(target);
-                    log.info("      -> 加载记录数：" + mapList.size());
-                    variableMap.put(value, mapList);
-                    break;
-                case "prompt":
-                    this.prompt(value);
-                    try {
-                        if (StringUtil.isEmpty(timeout)) {
-                            timeout = "3";
-                        }
-                        WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
-                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
-                        String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
-                        variableMap.put(target, text);
-                        if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
-                            run(item.getThenCommands());
-                        }
-                    } catch (TimeoutException e) {
-                        if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
-                            run(item.getElseCommands());
-                        }
-                        log.error("prompt超时");
-                    }
-                    break;
-                case "resize":
-                    String[] split = target.split(",");
-                    int w = Integer.parseInt(split[0]);
-                    int h = Integer.parseInt(split[1]);
-                    webDriver.manage().window().setSize(new Dimension(w, h));
-                    break;
-                case "pos":
-                    String img1 = value;
-                    String img2 = timeout;
-                    Integer distance1 = ImageUtil.getDistance(img1, img2);
-                    variableMap.put(target, distance1);
-                    log.info("      -> 偏移量：" + distance1);
-                    break;
-                case "slowDrag":
-                    WebElement element1 = webDriver.findElement(By.cssSelector(target));
-                    Integer dist = Integer.parseInt(value);
+                }
+            } else if ("wait".equals(command)) {
+                try {
                     if (StringUtil.isEmpty(timeout)) {
                         timeout = "3";
                     }
-                    int time = (int) (Float.parseFloat(timeout) * 1000);
-                    Random random = new Random();
-                    int n = 3;
-                    builder = new Actions(webDriver);
-                    builder.clickAndHold(element1);
-                    for (int j = 0; j < n; j++) {
-                        if (j < n - 1) {
-                            int tempDist = random.nextInt(dist - 1) + 1;
-                            int tempTime = random.nextInt(time - 1) + 1;
-                            dist -= tempDist;
-                            time -= tempTime;
-                            builder.moveByOffset(tempDist, 0);
-                            builder.pause(tempTime);
-                        } else {
-                            builder.moveByOffset(dist, 0);
-                            builder.pause(time);
-                        }
+                    WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
+                    if ("visible".equals(value)) {
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
+                    } else if ("url".equals(value)) {
+                        wait.until(ExpectedConditions.urlMatches(target));
+                    } else if ("invisible".equals(value)) {
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(target)));
                     }
-                    builder.release();
-                    builder.perform();
-                    break;
-                default:
-                    break;
+                    if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
+                        run(item.getThenCommands());
+                    }
+                } catch (TimeoutException e) {
+                    if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
+                        run(item.getElseCommands());
+                    }
+                    log.error("wait超时:" + item);
+                }
+            } else if ("saveJson".equals(command)) {
+                download(target, value, "json");
+            } else if ("saveCsv".equals(command)) {
+                download(target, value, "csv");
+            } else if ("log".equals(command)) {
+                //输出日志
+                log.info("      -> " + target);
+            } else if ("stop".equals(command)) {
+                //终止
+                stop = true;
+            } else if ("keydown".equals(command)) {
+                Actions actions = new Actions(webDriver);
+                switch (target.toLowerCase()) {
+                    case "end":
+                        actions.sendKeys(Keys.END).perform();
+                        break;
+                    case "home":
+                        actions.sendKeys(Keys.HOME).perform();
+                        break;
+                    case "f5":
+                        actions.sendKeys(Keys.F5).perform();
+                        break;
+                }
+            } else if ("newHar".equals(command)) {
+                if (this.proxy != null) {
+                    proxy.newHar();
+                }
+            } else if ("endHar".equals(command)) {
+                if (this.proxy != null && target != null) {
+                    Har har = proxy.endHar();
+                    List<Map<String, String>> requests = new ArrayList();
+                    for (HarEntry entry : har.getLog().getEntries()) {
+                        String method = entry.getRequest().getMethod();
+                        if (method.equals("OPTIONS")) {
+                            continue;
+                        }
+                        String url = entry.getRequest().getUrl();
+                        String content = entry.getResponse().getContent().getText();
+                        Map<String, String> map = new HashMap<>();
+                        map.put("url", url);
+                        map.put("method", method);
+                        map.put("content", content);
+                        requests.add(map);
+                    }
+                    variableMap.put(target, requests);
+                }
+            } else if ("maximize".equals(command)) {
+                webDriver.manage().window().maximize();
+            } else if ("loadExcel".equals(command)) {
+                List<Map<String, String>> mapList = ExcelUtil.excel2List(target);
+                log.info("      -> 加载记录数：" + mapList.size());
+                variableMap.put(value, mapList);
+            } else if ("prompt".equals(command)) {
+                this.prompt(value);
+                try {
+                    if (StringUtil.isEmpty(timeout)) {
+                        timeout = "3";
+                    }
+                    WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
+                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
+                    String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
+                    variableMap.put(target, text);
+                    if (item.getThenCommands() != null && !item.getThenCommands().isEmpty()) {
+                        run(item.getThenCommands());
+                    }
+                } catch (TimeoutException e) {
+                    if (item.getElseCommands() != null && !item.getElseCommands().isEmpty()) {
+                        run(item.getElseCommands());
+                    }
+                    log.error("prompt超时");
+                }
+            } else if ("resize".equals(command)) {
+                String[] split = target.split(",");
+                int w = Integer.parseInt(split[0]);
+                int h = Integer.parseInt(split[1]);
+                webDriver.manage().window().setSize(new Dimension(w, h));
+            } else if ("pos".equals(command)) {
+                String img1 = value;
+                String img2 = timeout;
+                Integer distance1 = ImageUtil.getDistance(img1, img2);
+                variableMap.put(target, distance1);
+                log.info("      -> 偏移量：" + distance1);
+            } else if ("slowDrag".equals(command)) {
+                WebElement element1 = webDriver.findElement(By.cssSelector(target));
+                Integer dist = Integer.parseInt(value);
+                if (StringUtil.isEmpty(timeout)) {
+                    timeout = "3";
+                }
+                int time = (int) (Float.parseFloat(timeout) * 1000);
+                Random random = new Random();
+                int n = 3;
+                builder = new Actions(webDriver);
+                builder.clickAndHold(element1);
+                for (int j = 0; j < n; j++) {
+                    if (j < n - 1) {
+                        int tempDist = random.nextInt(dist - 1) + 1;
+                        int tempTime = random.nextInt(time - 1) + 1;
+                        dist -= tempDist;
+                        time -= tempTime;
+                        builder.moveByOffset(tempDist, 0);
+                        builder.pause(tempTime);
+                    } else {
+                        builder.moveByOffset(dist, 0);
+                        builder.pause(time);
+                    }
+                }
+                builder.release();
+                builder.perform();
+
             }
         }
+
     }
 
     /**
@@ -535,7 +517,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         List<SeleniumCmd> list = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
-            SeleniumCmd seleniumCmd = new SeleniumCmd(line, i + startLineNum+1);
+            SeleniumCmd seleniumCmd = new SeleniumCmd(line, i + startLineNum + 1);
             if (seleniumCmd.isWaitCmd() || seleniumCmd.isPromptCmd()) {
                 if (i + 1 < lines.length && "then".equals(lines[i + 1].trim())) {
                     //如果wait下一行是then，则需要设置then和else
@@ -672,7 +654,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     seleniumCmd.setRepeatCommands(parse(repeatLines, beginLineNum + 1));
                 }
                 list.add(seleniumCmd);
-            } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd() || seleniumCmd.isWinCmd()) {
+            } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd() || seleniumCmd.isWinCmd() || seleniumCmd.isWscript()) {
                 if (i + 1 < lines.length && "<script>".equals(lines[i + 1].trim())) {
                     String statement = "";
                     for (int j = i + 2; j < lines.length; j++) {
@@ -925,8 +907,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         sb.append("  div.setAttribute('style','position: fixed;z-index:999999;font-size:16px;left:calc(50% - 200px);color:#fff;width:400px;top:calc(50% - 100px);height:200px;background-color:lightpink;text-align:center;');\n");
 
         sb.append("  var content = document.createElement('p');\n");
-        sb.append("  content.setAttribute('style','margin-top:70px;');\n");
-        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'") + "';\n");
+        sb.append("  content.setAttribute('style','margin-top:70px;overflow:auto;height:80px');\n");
+        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'").replace("\n","<br>") + "';\n");
         sb.append("  div.appendChild(content);\n");
 
         sb.append("  var closeBtn = document.createElement('span');\n");
@@ -967,7 +949,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
         sb.append("  var content = document.createElement('p');\n");
         sb.append("  content.setAttribute('style','margin-top:50px;');\n");
-        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'") + "';\n");
+        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'").replace("\n","<br>") + "';\n");
         sb.append("  var input = document.createElement('input');\n");
         sb.append("  input.style.width='80%';\n");
         sb.append("  div.appendChild(content);\n");

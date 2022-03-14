@@ -40,6 +40,10 @@ public class SeleniumCmd {
         return "cmd".equals(this.command);
     }
 
+    public boolean isWscript() {
+        return "wscript".equals(this.command);
+    }
+
     public boolean isWaitCmd() {
         return "wait".equals(this.command);
     }

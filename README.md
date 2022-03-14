@@ -397,15 +397,25 @@ execSql i conn_a id
 ```
 ### 31.执行cmd脚本
 第二个参数为结果存储的key，处理结果为批处理打印的字符串,非必要     
-`<script></script>`包裹的是执行的命令，必须是字符串数组
+`<script></script>`包裹的是执行的命令，如果需调用外部变量，请使用`_$map.xxx`代替，本质为替换字符串
 ```js
-cmd a
-<script>
-    
-return 'ping www.baidu.com'.split(' ')
+set a www.baidu.com
+cmd b
+<script>    
+ping _$map.a
+log %b%
 </script>
 ``` 
-### 32.win32
+### 32.执行wsh脚本
+第二个参数为结果存储的key，处理结果为批处理打印的字符串,非必要     
+`<script></script>`包裹的是执行的命令，如果需调用外部变量，请使用`_$map.xxx`代替，本质为替换字符串
+```js
+set a 1
+wscript
+<script>
+    WScript.Echo("_$map.a") 
+</script>
+### 33.win32
 ```js
 //根据窗口标题查找窗口句柄(long)，并存储到第二个参数设置的key中。
 win32_getByTitle hwnd 任务管理器
@@ -426,12 +436,12 @@ win32_getDesktop hwnd
 //根据窗口句柄截图并保存
 win32_screenshot 134642 1.jpg
 ```
-### 33.无浏览器窗口模式
+### 34.无浏览器窗口模式
 启动时检查如果存在以下指令则启动无浏览器窗口模式
 ```js
 #headless
 ```
-### 34.计时器
+### 35.计时器
 StopWatch的缩写
 ```js
 //开始计时,此时a存储的是当前的时间戳(long)

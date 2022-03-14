@@ -1,10 +1,13 @@
 package com.iceolive.selenium;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.*;
 
 /**
  * @author wangmianzhe
  */
+@Slf4j
 public class FileUtil {
     public static String readFromFile(String path, String charset) {
 
@@ -40,5 +43,23 @@ public class FileUtil {
         }
 
         return sb.toString();
+    }
+    public static boolean writeToFile(String path, String text, String charset) {
+        if (text == null) {
+            throw new IllegalArgumentException("text不能为null！");
+        }
+        try {
+            byte[] bytes = text.getBytes(charset);
+            try (OutputStream out = new BufferedOutputStream(new FileOutputStream(path, false))) {
+                out.write(bytes);
+            } catch (IOException e) {
+                log.error("写入文件异常", e);
+                throw new RuntimeException("写入文件异常",e);
+            }
+            return true;
+        } catch (UnsupportedEncodingException e) {
+            log.error("写入文件异常", e);
+            throw new RuntimeException(e);
+        }
     }
 }
