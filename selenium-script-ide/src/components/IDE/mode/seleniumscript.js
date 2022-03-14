@@ -17,7 +17,7 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
   const list = ['open', 'type', 'clear', 'click', 'enter', 'drag', 'scroll', 'switch', 'exec', 'execAsync',
     'set', 'setAsync', 'sleep', 'wait', 'when', 'repeat', 'alert', 'saveCsv', 'saveJson',
     'log', 'screenshot', 'stop', 'keydown', 'newHar', 'endHar', 'maximize', 'loadExcel',
-    'setConn', 'querySql', 'execSql', 'cmd', 'wsh', '#headless', 'newStw', 'endStw',
+    'setConn', 'querySql', 'execSql', 'cmd', 'wscript', '#headless', 'newStw', 'endStw',
     'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
     'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot',
     'begin', 'then', 'else', 'end',
@@ -141,7 +141,7 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         'open', 'type', 'clear', 'click', 'enter', 'drag', 'scroll', 'switch', 'exec', 'execAsync',
         'set', 'setAsync', 'sleep', 'wait', 'when', 'repeat', 'alert', 'saveCsv', 'saveJson',
         'log', 'screenshot', 'stop', 'keydown', 'newHar', 'endHar', 'maximize', 'loadExcel',
-        'setConn', 'querySql', 'execSql', 'cmd', 'wsh', '#headless', 'newStw', 'endStw',
+        'setConn', 'querySql', 'execSql', 'cmd', 'wscript', '#headless', 'newStw', 'endStw',
         'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
         'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot'
       ]
