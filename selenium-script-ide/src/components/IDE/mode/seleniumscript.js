@@ -10,6 +10,24 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
     var obj = {},
       words = str.split(" ");
     for (var i = 0; i < words.length; ++i) obj[words[i]] = true;
+
+    function kw(type) { return { type: type, style: "keyword" }; }
+    var A = kw("keyword a"), B = kw("keyword b"), C = kw("keyword c"), D = kw("keyword d");
+    var operator = kw("operator"), atom = { type: "atom", style: "atom" };
+    var jsKeywords = {
+      "if": kw("if"), "while": A, "with": A, "else": B, "do": B, "try": B, "finally": B,
+      "return": D, "break": D, "continue": D, "new": kw("new"), "delete": C, "void": C, "throw": C,
+      "debugger": kw("debugger"), "var": kw("var"), "const": kw("var"), "let": kw("var"),
+      "function": kw("function"), "catch": kw("catch"),
+      "for": kw("for"), "switch": kw("switch"), "case": kw("case"), "default": kw("default"),
+      "in": operator, "typeof": operator, "instanceof": operator,
+      "true": atom, "false": atom, "null": atom, "undefined": atom, "NaN": atom, "Infinity": atom,
+      "this": kw("this"), "class": kw("class"), "super": kw("atom"),
+      "yield": C, "export": kw("export"), "import": kw("import"), "extends": C,
+      "await": C
+    };
+
+    Object.assign(obj, jsKeywords)
     return obj;
   }
 
@@ -21,8 +39,10 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
     'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
     'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot',
     'begin', 'then', 'else', 'end',
-    '<script>', '</script>', '<sql>', '</sql>']
-  var keywords = parseWords(list.join(' '));
+  ]
+  var sqlKeywords = " alter and as asc between by count create delete desc distinct drop from group having in insert into is join like not on or order select set table union update values where limit ";
+
+  var keywords = parseWords(list.join(' ') + sqlKeywords);
   var type, content;
 
   function ret(tp, style, cont) {
@@ -48,6 +68,16 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
     } else if (/\d/.test(ch)) {
       stream.eatWhile(/[\w\.]/);
       return "number";
+    } else if (ch == '<') {
+      type = stream.eat("/") ? "closeTag" : "openTag";
+      stream.skipTo('>')
+      stream.eat('>')
+      return "tag bracket";
+    } else if (ch == "/") {
+      if (stream.eat("/")) {
+        stream.skipToEnd();
+        return ret("comment", "comment");
+      }
     } else {
       stream.eatWhile(/[\w\$_{}\xa1-\uffff]/);
       var word = stream.current();
