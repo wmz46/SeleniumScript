@@ -22,7 +22,7 @@ const id = "ide";
 //编辑器内容
 const value = ref("");
 //避免监听赋值造成死循环
-let updateView: boolean = false;
+let updateView: boolean = true;
 //编辑器内容变动触发事件
 const changeValue = (newValue: string) => {
   value.value = newValue;
