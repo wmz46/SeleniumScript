@@ -115,15 +115,15 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
   let inTag = false;
   let tagType = ''
   for (let i = cursor.line - 1; i >= 0; i--) {
-    if (editor.getLine(i).match('^\s*(<\/script>|<\/sql>)')) {
+    if (editor.getLine(i).match(/^\s*(<\/script>|<\/sql>)/)) {
       inTag = false;
       tagType = ''
       break;
-    } else if (editor.getLine(i).match('^\s*<script>')) {
+    } else if (editor.getLine(i).match(/^\s*<script>/)) {
       inTag = true;
       tagType = 'script'
       break;
-    } else if (editor.getLine(i).match('^\s*<sql>')) {
+    } else if (editor.getLine(i).match(/^\s*<sql>/)) {
       inTag = true;
       tagType = 'sql'
       break;
@@ -148,44 +148,41 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
       return { list: list.filter(m => m.toLowerCase().indexOf(str.toLowerCase()) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
     } else {
       //开始标签
-      let str = line.substring(0, end).match(/^(<[a-zA-Z]*)$/)?.[1]
+      let str = line.substring(0, end).match(/^\s*(<[a-zA-Z]*)$/)?.[1]
       if (str) {
         const start = end - str.length;
         const list = ['<script>', '<sql>']
         return { list: list.filter(m => m.toLowerCase().indexOf(str.toLowerCase()) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-      } else {
-        //变量
-        let str = line.substring(0, end).match(/(%[^\s%]*)$/)?.[1]
-        if (str) {
-          const list = getAllVariables(editor, cursor.line)
-          for (let i = 0; i < list.length; i++) {
-            list[i] = "%" + list[i] + "%"
-          }
-          const start = end - str.length;
-          return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-        } else {
-          let str = line.substring(0, end).match(/^\s*(querySql|execSql)\s*[^\s]+\s+$/)
-          if (str) {
-            const list = [];
-            const start = end;
-            for (let i = cursor.line - 1; i >= 0; i--) {
-              let line = editor.getLine(i)
-              let variable = line.match(/^\s*setConn\s+([^\s]*)\s*/)?.[1]
-              if (variable) {
-                list.push(variable)
-              }
-            }
-            return { list: list, from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-          }
-
-
-          return null;
-        }
       }
+      //变量
+      str = line.substring(0, end).match(/(%[^\s%]*)$/)?.[1]
+      if (str) {
+        const list = getAllVariables(editor, cursor.line)
+        for (let i = 0; i < list.length; i++) {
+          list[i] = "%" + list[i] + "%"
+        }
+        const start = end - str.length;
+        return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+      }
+      //连接变量
+      str = line.substring(0, end).match(/^\s*(querySql|execSql)\s*[^\s]+\s+$/)
+      if (str) {
+        const list = [];
+        const start = end;
+        for (let i = cursor.line - 1; i >= 0; i--) {
+          let line = editor.getLine(i)
+          let variable = line.match(/^\s*setConn\s+([^\s]*)\s*/)?.[1]
+          if (variable) {
+            list.push(variable)
+          }
+        }
+        return { list: list, from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+      }
+      return null;
     }
   } else {
     //结束标签
-    let str = line.substring(0, end).match(/^((<|<\/)[a-zA-Z]*)$/)?.[1]
+    let str = line.substring(0, end).match(/^\s*((<|<\/)[a-zA-Z]*)$/)?.[1]
     if (str) {
       const start = end - str.length;
       if (tagType == 'script') {
@@ -197,22 +194,31 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
       }
     } else {
       if (tagType == 'script') {
+        //变量
         let str = line.substring(0, end).match(/(_[\$a-z]*)$/)?.[1]
         if (str) {
           const start = end - str.length;
           const list = ['_$cb', '_$map']
           return { list: list.filter(m => m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-        } else {
-          let match = line.substring(0, end).match(/_\$map\.([^\s])*$/)
-          if (match) {
-            let str = match?.[1] || ''
-            const list = getAllVariables(editor, cursor.line)
-            const start = end - str.length;
-            return { list: list.filter(m => str.length == 0 || m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
-          } else {
-            return null;
-          }
         }
+        //变量
+        let match = line.substring(0, end).match(/_\$map\.([_\$a-zA-Z0-9]*)$/)
+        if (match) {
+          let str = match?.[1] || ''
+          const list = getAllVariables(editor, cursor.line)
+          const start = end - str.length;
+          return { list: list.filter(m => str.length == 0 || m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+        }
+        //document
+        match = line.substring(0, end).match(/document\.([a-zA-Z]*)$/)
+        if (match) {
+          let str = match?.[1] || ''
+          const list = ['querySelector', 'querySelectorAll', 'getElementById']
+          const start = end - str.length;
+          return { list: list.filter(m => str.length == 0 || m.indexOf(str) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
+
+        }
+        return null;
       } else {
         return null;
       }

@@ -7,7 +7,7 @@ import "codemirror/addon/hint/show-hint.js";
 import "codemirror/addon/hint/anyword-hint.js";
 import { ElMessageBox, ElMessage } from "element-plus";
 import CodeMirror from "codemirror";
-import {Base64} from "js-base64";
+import { Base64 } from "js-base64";
 import WS from "./ws/index";
 const props = withDefaults(
   defineProps<{ modelValue?: string; height?: string | number }>(),
@@ -39,6 +39,28 @@ const cmOptions = {
   lineNumbers: true,
   indentUnit: 0,
   extraKeys: {
+    "Tab": (editor: any) => {
+      let content = editor.getValue();
+      let arr = content.split("\n");
+      let from = editor.listSelections()[0].from().line;
+      let to = editor.listSelections()[0].to().line;
+      const cursor = editor.getCursor();
+      if (from < to) {
+        let comment = true;
+        for (let i = from; i <= to; i++) {
+          arr[i] = '\t' + arr[i];
+        }
+        let text = arr.join("\n");
+        editor.setValue(text);
+        editor.setCursor({ line: cursor.line + 1, ch: cursor.ch });
+        changeValue(text);
+        let scrollInfo = editor.getScrollInfo();
+        editor.scrollTo(scrollInfo.left, scrollInfo.top);
+      } else {
+        editor.replaceSelection('\t');
+      }
+
+    },
     "Ctrl-/": (editor: any) => {
       let content = editor.getValue();
       let arr = content.split("\n");
@@ -66,6 +88,59 @@ const cmOptions = {
       changeValue(text);
       let scrollInfo = editor.getScrollInfo();
       editor.scrollTo(scrollInfo.left, scrollInfo.top);
+    },
+    'Ctrl-Alt-L': (editor: any) => {
+      let content = editor.getValue();
+      let arr = content.split("\n");
+      let indent = 0;
+      let scriptIndent = 0;
+      let inTag = false;
+      for (let i = 0; i < arr.length; i++) {
+        let cmd = arr[i].match(/^\s*([\/<a-zA-Z>]+)\s*/)?.[1]
+        if (['end', '<\/script>', '<\/sql>'].indexOf(cmd) > -1) {
+          if (['<\/script>', '<\/sql>'].indexOf(cmd) > -1) {
+            inTag = false
+          }
+          if (indent > 0) {
+            indent--
+          }
+        }
+        if (inTag) {
+          if (arr[i].trim().startsWith("}")) {
+            if (scriptIndent > 0) {
+              scriptIndent--
+            }
+          }
+        }
+        let j = 0;
+        let str = ""
+        while (j < indent) {
+          str += "  "
+          j++;
+        }
+        j = 0;
+        while (j < scriptIndent) {
+          str += '  '
+          j++
+        }
+        arr[i] = str + arr[i].trimStart()
+        if (['begin', 'then', 'else', '<script>', '<sql>'].indexOf(cmd) > -1) {
+          indent++
+        }
+        if (['<script>', '<sql>'].indexOf(cmd) > -1) {
+          inTag = true
+        }
+        if (inTag) {
+          if (arr[i].trim().endsWith("{")) {
+            scriptIndent++
+          }
+        }
+      }
+      let text = arr.join("\n");
+      editor.setValue(text);
+      changeValue(text);
+      let scrollInfo = editor.getScrollInfo()
+      editor.scrollTo(scrollInfo.left, scrollInfo.top)
     },
   },
 };
@@ -139,9 +214,9 @@ const runScript = () => {
   if (value.value.trim()) {
     ws.open()
       .then(() => {
-        ws.send(Base64.encode(JSON.stringify({script:value.value})))
+        ws.send(Base64.encode(JSON.stringify({ script: value.value })))
         ElMessage.success({
-          message:'已发送报文，请耐心等待'
+          message: '已发送报文，请耐心等待'
         })
 
       })
@@ -153,9 +228,9 @@ const runScript = () => {
           }
         );
       });
-  }else{
+  } else {
     ElMessage.error({
-      message:'请输入脚本'
+      message: '请输入脚本'
     })
   }
 };
@@ -163,35 +238,13 @@ const runScript = () => {
 
 <template>
   <div class="btn-group">
-
-    <el-button
-      type="default"
-      @click="openFileHandle"
-    >打开脚本</el-button>
-    <el-button
-      type="default"
-      @click="saveFileHandle"
-    >保存脚本</el-button>
-    <el-button
-      type="default"
-      @click="runScript"
-    >执行脚本</el-button>
-    <el-button
-      type="default"
-      @click="openDocument"
-    >在线文档</el-button>
-    <input
-      type="file"
-      ref="fileRef"
-      style="display:none"
-      @change="fileChangeHandle()"
-    />
+    <el-button type="default" @click="openFileHandle">打开脚本</el-button>
+    <el-button type="default" @click="saveFileHandle">保存脚本</el-button>
+    <el-button type="default" @click="runScript">执行脚本</el-button>
+    <el-button type="default" @click="openDocument">在线文档</el-button>
+    <input type="file" ref="fileRef" style="display:none" @change="fileChangeHandle()" />
   </div>
-  <textarea
-    :id="id"
-    :value="modelValue"
-    style="display:none"
-  ></textarea>
+  <textarea :id="id" :value="modelValue" style="display:none"></textarea>
 </template>
 
 <style scoped>
