@@ -7,6 +7,7 @@ import net.lightbody.bmp.BrowserMobProxyServer;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -191,9 +192,12 @@ public class ChromeUtil {
         boolean headless = Arrays.stream(script.split("\n")).filter(m -> m.trim().startsWith("#headless")).count() > 0;
 
         BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
-        if (proxy != null) {
-            InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
-            browserMobProxy.setChainedProxy(address);
+        if (StringUtils.isNotEmpty(proxy)) {
+            if(proxy.contains(":")){
+                InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
+                browserMobProxy.setChainedProxy(address);
+                enableMob = true;
+            }
         }
         if(enableMob) {
             browserMobProxy.start(0);
@@ -219,8 +223,9 @@ public class ChromeUtil {
             }
         }
         ChromeWebDriver finalWebDriver = webDriver;
+        boolean finalEnableMob = enableMob;
         webDriver.addWebDriverCloseEvent(() -> {
-            if (enableMob) {
+            if (finalEnableMob) {
                 browserMobProxy.stop();
             }
             finalWebDriver.quit();

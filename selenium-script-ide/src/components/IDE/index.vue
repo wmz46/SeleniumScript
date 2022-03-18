@@ -214,7 +214,7 @@ const runScript = () => {
   if (value.value.trim()) {
     ws.open()
       .then(() => {
-        ws.send(Base64.encode(JSON.stringify({ script: value.value })))
+        ws.send(Base64.encode(JSON.stringify({ script: value.value, proxy: proxy.value ? proxy.value : null })))
         ElMessage.success({
           message: '已发送报文，请耐心等待'
         })
@@ -234,21 +234,29 @@ const runScript = () => {
     })
   }
 };
+const proxy = ref('')
 </script>
 
 <template>
-  <div class="btn-group">
-    <el-button type="default" @click="openFileHandle">打开脚本</el-button>
-    <el-button type="default" @click="saveFileHandle">保存脚本</el-button>
-    <el-button type="default" @click="runScript">执行脚本</el-button>
-    <el-button type="default" @click="openDocument">在线文档</el-button>
-    <input type="file" ref="fileRef" style="display:none" @change="fileChangeHandle()" />
-  </div>
-  <textarea :id="id" :value="modelValue" style="display:none"></textarea>
+  <el-container>
+    <el-main>
+      <el-form>
+        <el-form-item label="代理地址">
+          <el-input v-model="proxy" placeholder="代理地址" clearable></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="default" @click="openFileHandle">打开脚本</el-button>
+          <el-button type="default" @click="saveFileHandle">保存脚本</el-button>
+          <el-button type="default" @click="runScript">执行脚本</el-button>
+          <el-button type="default" @click="openDocument">在线文档</el-button>
+          <input type="file" ref="fileRef" style="display:none" @change="fileChangeHandle()" />
+        </el-form-item>
+      </el-form>
+
+      <textarea :id="id" :value="modelValue" style="display:none"></textarea>
+    </el-main>
+  </el-container>
 </template>
 
 <style scoped>
-.btn-group button:not(:first-child) {
-  margin-left: 10px;
-}
 </style>
