@@ -44,7 +44,7 @@ public class SqlUtil {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
                     for (int i = 0; i < columnCount; i++) {
-                        String name = rsmd.getColumnName(i + 1);
+                        String name = rsmd.getColumnLabel(i + 1);
                         Object value = rs.getObject(i + 1);
                         if (value == null) {
                             row.put(name, null);
