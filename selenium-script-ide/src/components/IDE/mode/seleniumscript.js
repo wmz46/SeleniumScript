@@ -127,11 +127,11 @@ const getAllVariables = (editor, endLine) => {
   for (let i = endLine - 1; i >= 0; i--) {
     let line = editor.getLine(i)
     let variable = line.match(/^\s*(set|wscript|cmd|setAsync|endHar|endStw|newStw|querySql|execSql|win32_getByTitle|win32_getAllByPID|win32_getChildren|win32_getPID|win32_getDesktop)\s+([^\s]*)\s*/)?.[2]
-    if (variable) {
+    if (variable && !list.find(m => m == variable)) {
       list.push(variable)
     }
     variable = line.match(/^\s*execSql\s+[^\s]+\s+[^\s]+\s+([^\s+]+)/)?.[1]
-    if (variable) {
+    if (variable && !list.find(m => m == variable)) {
       list.push(variable)
     }
   }
@@ -202,8 +202,8 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         for (let i = cursor.line - 1; i >= 0; i--) {
           let line = editor.getLine(i)
           let variable = line.match(/^\s*setConn\s+([^\s]*)\s*/)?.[1]
-          if (variable) {
-            list.push(variable)
+          if (variable && !list.find(m => m == variable)) {
+            list.add(variable)
           }
         }
         return { list: list, from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
