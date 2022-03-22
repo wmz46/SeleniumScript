@@ -1,26 +1,27 @@
 # SeleniumScript
 基于selenium-java的自定义脚本语言工具类
-## 当前最新版本
-```xml
- <dependency>
-    <groupId>com.iceolive</groupId>
-    <artifactId>selenium-script</artifactId>
-    <version>0.4.0</version>
-</dependency>
+ 
+## 一、可执行jar包
+releases提供了一个可执行jar包的下载，也可通过clone本项目，通过mvn package自行打包。
+
+原先通过中央仓库jar包引用方式由于调用过于麻烦，已废弃。   
+
+只支持windows下运行。
+### 使用方法
+下载SeleniumScript.jar后，命令行执行    
+注意：脚本文件编码请使用utf-8，否则中文将会乱码          
+```cmd
+:: 脚本后缀不必是txt，这里只是举个例子
+java -jar SeleniumScript.jar -s "D://你的测试脚本.txt"
+:: 或者
+java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
+:: 指定驱动路径
+java -jar SeleniumScript.jar -script "D://你的测试脚本.txt" -driver "D://chromedriver.exe"
+:: 以websocket服务启动,当需执行脚本非本地文件存储时使用。
+java -jar SeleniumScript.jar -ws
 ```
-## 一、工具类介绍
-ChromeWebDriver 
-### 1.构造方法
-只有一个入参，为chromedriver.exe的完整路径。请和本机的chrome版本相一致。    
-chromedriver下载地址：http://npm.taobao.org/mirrors/chromedriver
-### 2.主要方法
-```
-//执行外部脚本，path为文件路径
-void runFromFile(String path);
-//执行字符串脚本
-void run(String cmd);
-```
-### 3.测试脚本
+
+### 测试脚本
 ```js
 set keyword www.iceolive.com
 open http://www.baidu.com
@@ -39,47 +40,14 @@ begin
         return arguments[0]['a']+1;
     </script>
 end
-```
-### 4.测试代码
-```java
-   //杀掉所有chromedriver进程
-   ChromeUtil.killChromeDriver();
-   ChromeWebDriver webDriver = new ChromeWebDriver(System.getProperty("user.dir") + "\\webdriver\\chromedriver.exe");
-   try{
-       webDriver.runFromFile(System.getProperty("user.dir") +"\\tests\\test.txt");   
-       System.out.println("执行完毕");
-   }catch(Exception e){
-       System.out.println("执行出错:"+e.toString());
-   }
+``` 
 
-   //打印所有的变量
-   System.out.println(webDriver.getVariableMap());
-   webDriver.close();
-   webDriver.quit();
-
-```
-## 二、可执行jar包
-releases提供了一个可执行jar包的下载，也可通过clone本项目，通过mvn package自行打包。
-### 使用方法
-下载SeleniumScript.jar后，命令行执行    
-注意：脚本文件编码请使用utf-8，否则中文将会乱码          
-```cmd
-:: 脚本后缀不必是txt，这里只是举个例子
-java -jar SeleniumScript.jar -s "D://你的测试脚本.txt"
-:: 或者
-java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
-:: 指定驱动路径
-java -jar SeleniumScript.jar -script "D://你的测试脚本.txt" -driver "D://chromedriver.exe"
-:: 以websocket服务启动,当需执行脚本非本地文件存储时使用。
-java -jar SeleniumScript.jar -ws
-```
-
-## 三、目录说明
+## 二、目录说明
 - tests目录为测试脚本目录，里面附带了一个测试脚本       
-## 四、开发背景
+## 三、开发背景
 selenium是个强大的自动化测试工具，但是我还是想让它和js脚本语言一样，支持解释执行。并且我希望它的语法还能更简单一些。    
 为了支持我在运行时修改脚本，无需重新编译，并且减少代码的编写量，所以开发了这样看起来有点蹩脚的脚本语言。
-## 五、脚本语法说明：
+## 四、脚本语法说明：
 - 第一个参数为指令
 - 其他行内参数请用单引号包裹，如参数没有包含空格，也可省略单引号。
 - js脚本请使用 \<script> 和\</script>包裹，且标签需独占一行。
