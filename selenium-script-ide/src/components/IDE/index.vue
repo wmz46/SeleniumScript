@@ -222,7 +222,7 @@ const runScript = () => {
       })
       .catch(() => {
         ElMessageBox.alert(
-          '未安装或运行客户端。<a href="https://github.com/wmz46/SeleniumScript/releases/download/v0.4.0/SeleniumScript.zip" target="_blank">点击下载客户端</a><br>下载解压后，请双击运行startup.bat。',
+          '未安装或运行客户端。<a href="https://github.com/wmz46/SeleniumScript/releases/latest/download/SeleniumScript.zip" target="_blank">点击下载最新版客户端</a><br>下载解压后，请双击运行startup.bat。',
           {
             dangerouslyUseHTMLString: true,
           }
