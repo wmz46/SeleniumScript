@@ -203,7 +203,7 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
           let line = editor.getLine(i)
           let variable = line.match(/^\s*setConn\s+([^\s]*)\s*/)?.[1]
           if (variable && !list.find(m => m == variable)) {
-            list.add(variable)
+            list.push(variable)
           }
         }
         return { list: list, from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
