@@ -41,6 +41,10 @@ public class ChromeUtil {
 
     public static String getVersion() {
         String version = RegUtil.getValue("\"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome\"", "DisplayVersion");
+        if(version!=null){
+            return version;
+        }
+        version = RegUtil.getValue("\"HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome\"","DisplayVersion");
         return version;
     }
 
