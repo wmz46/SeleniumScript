@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.sql.Connection;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -300,7 +301,18 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
                 }
             } else if ("open".equals(command)) {
-                webDriver.get(target);
+                try {
+                    webDriver.get(target);
+                }catch(Exception e){
+                    try {
+                        WebDriverWait wait = new WebDriverWait(webDriver,  Duration.ofSeconds(3));
+                        wait.until(ExpectedConditions.urlMatches(target));
+                    } catch (TimeoutException e1) {
+                        throw new RuntimeException("open超时",e1);
+                    }catch(Exception e2){
+                        throw new RuntimeException("open异常",e2);
+                    }
+                }
             } else if ("clear".equals(command)) {
                 webDriver.findElement(By.cssSelector(target)).clear();
             } else if ("type".equals(command)) {
@@ -363,7 +375,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isEmpty(timeout)) {
                         timeout = "3";
                     }
-                    WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
+                    WebDriverWait wait = new WebDriverWait(webDriver,Duration.ofSeconds(Integer.parseInt(timeout)));
                     if ("visible".equals(value)) {
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
                     } else if ("url".equals(value)) {
@@ -438,7 +450,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isEmpty(timeout)) {
                         timeout = "3";
                     }
-                    WebDriverWait wait = new WebDriverWait(webDriver, Integer.parseInt(timeout), 100);
+                    WebDriverWait wait = new WebDriverWait(webDriver,Duration.ofSeconds(Integer.parseInt(timeout)));
                     wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
                     String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
                     variableMap.put(target, text);
