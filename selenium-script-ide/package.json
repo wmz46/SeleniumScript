@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "codemirror": "^5.63.3",
-    "element-plus": "^2.0.5",
+    "element-plus": "^2.2.19",
     "js-base64": "^3.7.2",
     "vue": "^3.2.25"
   },
