@@ -1,5 +1,6 @@
 package com.iceolive.selenium;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.lowagie.text.pdf.codec.Base64;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
@@ -36,9 +37,15 @@ public class ChromeServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket webSocket, String s) {
         String s1 = new String(Base64.decode(s), StandardCharsets.UTF_8);
-        Map<String, String> jsonObject = JsonUtil.parse(s1);
-        String script = jsonObject.get("script");
-        String proxy = jsonObject.get("proxy");
+        JsonNode jsonObject = JsonUtil.parse(s1);
+        String script = null;
+        if (jsonObject.get("script") != null) {
+            script = jsonObject.get("script").asText();
+        }
+        String proxy = null;
+        if (jsonObject.get("proxy") != null) {
+            proxy = jsonObject.get("proxy").asText();
+        }
         String driver = System.getProperty("user.dir") + "\\chromedriver.exe";
         try {
             ChromeUtil.runScript(script, driver, proxy);
@@ -54,7 +61,7 @@ public class ChromeServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        log.info("本地服务启动成功 端口：" + this.port + "  当前版本："+VersionUtil.getVersion());
+        log.info("本地服务启动成功 端口：" + this.port + "  当前版本：" + VersionUtil.getVersion());
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
     }
