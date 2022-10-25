@@ -1,7 +1,5 @@
 package com.iceolive.selenium;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.lowagie.text.pdf.codec.Base64;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
@@ -11,6 +9,7 @@ import org.java_websocket.server.WebSocketServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * @author wangmianzhe
@@ -37,9 +36,9 @@ public class ChromeServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket webSocket, String s) {
         String s1 = new String(Base64.decode(s), StandardCharsets.UTF_8);
-        JSONObject jsonObject = JSON.parseObject(s1);
-        String script = jsonObject.getString("script");
-        String proxy = jsonObject.getString("proxy");
+        Map<String, String> jsonObject = JsonUtil.parse(s1);
+        String script = jsonObject.get("script");
+        String proxy = jsonObject.get("proxy");
         String driver = System.getProperty("user.dir") + "\\chromedriver.exe";
         try {
             ChromeUtil.runScript(script, driver, proxy);
