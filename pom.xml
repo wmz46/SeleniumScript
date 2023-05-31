@@ -124,7 +124,7 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.0.0-rc-1</version>
+            <version>4.9.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>io.netty</groupId>
@@ -192,7 +192,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>30.1-jre</version>
+            <version>31.1-jre</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
