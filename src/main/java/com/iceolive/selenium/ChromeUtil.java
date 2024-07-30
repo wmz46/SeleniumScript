@@ -105,26 +105,20 @@ public class ChromeUtil {
     public static String getDriver() throws IOException {
         String chromedriver = System.getProperty("user.dir") + "\\chromedriver.exe";
         String edgedriver = System.getProperty("user.dir") + "\\msedgedriver.exe";
-        boolean isChrome = false;
-        boolean isEdge = false;
-        if (new File(chromedriver).exists()) {
-            isChrome =true;
-        }
-        if(new File(edgedriver).exists()){
-            isEdge = true;
-        }
+        boolean isChrome = new File(chromedriver).exists();
+        boolean isEdge = new File(edgedriver).exists();
         if(!isChrome && !isEdge){
-            isChrome =  downloadAndUnzip();
-            if(!isChrome){
-                //如果还是没有chromedriver
-                isEdge = EdgeUtil.downloadDriver();
+            isEdge = EdgeUtil.downloadDriver();
+            if(!isEdge) {
+                isChrome = downloadAndUnzip();
             }
+        }
+        //edge优先
+        if (isEdge) {
+            return edgedriver;
         }
         if (isChrome) {
             return chromedriver;
-        }
-        if (isEdge) {
-            return edgedriver;
         }
         return null;
     }
