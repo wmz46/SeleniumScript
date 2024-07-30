@@ -41,14 +41,14 @@ public class ChromeUtil {
 
     public static String getVersion() {
         String version = RegUtil.getValue("\"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome\"", "DisplayVersion");
-        if(version!=null){
+        if (version != null) {
             return version;
         }
-        version = RegUtil.getValue("\"HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome\"","DisplayVersion");
+        version = RegUtil.getValue("\"HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome\"", "DisplayVersion");
         return version;
     }
 
-    public static void unzip(File file, String destDirPath) throws IOException {
+    public static void unzip(File file, String destDirPath, String ignorePath) throws IOException {
 
         log.info("开始解压文件...");
         ZipFile zipFile = new ZipFile(file);
@@ -56,12 +56,15 @@ public class ChromeUtil {
 
         while (entries.hasMoreElements()) {
             ZipEntry entry = (ZipEntry) entries.nextElement();
-
+            String name = entry.getName();
+            if (name.startsWith(ignorePath)) {
+                name = name.substring(ignorePath.length());
+            }
 
             // 如果是文件夹，就创建个文件夹
 
             if (entry.isDirectory()) {
-                String dirPath = destDirPath + "/" + entry.getName();
+                String dirPath = destDirPath + "/" + name;
 
                 File dir = new File(dirPath);
 
@@ -70,7 +73,7 @@ public class ChromeUtil {
             } else {
                 // 如果是文件，就先创建一个文件，然后用io流把内容copy过去
 
-                File targetFile = new File(destDirPath + "/" + entry.getName());
+                File targetFile = new File(destDirPath + "/" + name);
 
                 // 保证这个文件的父文件夹必须要存在
 
@@ -114,27 +117,40 @@ public class ChromeUtil {
             log.error("请先安装chrome浏览器");
         }
         version = version.split("\\.")[0];
+
         Request request;
         Response response;
-        try {
-            String url = domain + "/LATEST_RELEASE_" + version;
+        String downloadUrl;
+        if (Integer.parseInt(version) <= 114) {
+            try {
+                String url = domain + "/LATEST_RELEASE_" + version;
+                request = new Request.Builder()
+                        .url(url)
+                        .get()
+                        .build();
+                response = client.newCall(request).execute();
+            } catch (Exception e) {
+                domain = chromeDriverDomain;
+                String url = domain + "/LATEST_RELEASE_" + version;
+                request = new Request.Builder()
+                        .url(url)
+                        .get()
+                        .build();
+                response = client.newCall(request).execute();
+            }
+            String fullVersion = response.body().string();
+            downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
+        } else {
+            String url = "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_" + version;
             request = new Request.Builder()
                     .url(url)
                     .get()
                     .build();
             response = client.newCall(request).execute();
-        } catch (Exception e) {
-            domain = chromeDriverDomain;
-            String url = domain + "/LATEST_RELEASE_" + version;
-            request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
-            response = client.newCall(request).execute();
-
+            String fullVersion = response.body().string();
+            downloadUrl = "https://storage.googleapis.com/chrome-for-testing-public" + "/" + fullVersion + "/win32/chromedriver-win32.zip";
         }
-        String fullVersion = response.body().string();
-        String downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
+
         log.info("开始下载chromedriver...");
         request = new Request.Builder().url(downloadUrl).build();
         response = client.newCall(request).execute();
@@ -151,8 +167,12 @@ public class ChromeUtil {
         fos.flush();
         is.close();
         fos.close();
+        if (Integer.parseInt(version) <= 114) {
+            unzip(new File(downloadPath), System.getProperty("user.dir"),"");
+        }else{
+            unzip(new File(downloadPath), System.getProperty("user.dir"),"chromedriver-win32/");
+        }
 
-        unzip(new File(downloadPath), System.getProperty("user.dir"));
 
     }
 
@@ -185,7 +205,7 @@ public class ChromeUtil {
             ChromeServer chromeServer = new ChromeServer(port);
             chromeServer.start();
         } else {
-            log.info("当前版本："+VersionUtil.getVersion());
+            log.info("当前版本：" + VersionUtil.getVersion());
             String s = FileUtil.readFromFile(script, "utf-8");
             runScript(s, driver, proxy);
         }
@@ -197,30 +217,30 @@ public class ChromeUtil {
 
         BrowserMobProxy browserMobProxy = new BrowserMobProxyServer();
         if (StringUtils.isNotEmpty(proxy)) {
-            if(proxy.contains(":")){
+            if (proxy.contains(":")) {
                 InetSocketAddress address = new InetSocketAddress(proxy.split(":")[0], Integer.parseInt(proxy.split(":")[1]));
                 browserMobProxy.setChainedProxy(address);
                 enableMob = true;
             }
         }
-        if(enableMob) {
+        if (enableMob) {
             browserMobProxy.start(0);
         }
         ChromeWebDriver webDriver;
         try {
             if (enableMob) {
-                webDriver = new ChromeWebDriver(driver,headless, browserMobProxy);
+                webDriver = new ChromeWebDriver(driver, headless, browserMobProxy);
             } else {
-                webDriver = new ChromeWebDriver(driver,headless);
+                webDriver = new ChromeWebDriver(driver, headless);
             }
         } catch (Exception e) {
             if (e.getMessage().contains("only supports Chrome version")) {
                 log.error("chromedriver版本不匹配！");
                 downloadAndUnzip();
                 if (enableMob) {
-                    webDriver = new ChromeWebDriver(driver,headless, browserMobProxy);
+                    webDriver = new ChromeWebDriver(driver, headless, browserMobProxy);
                 } else {
-                    webDriver = new ChromeWebDriver(driver,headless);
+                    webDriver = new ChromeWebDriver(driver, headless);
                 }
             } else {
                 throw e;
@@ -243,7 +263,7 @@ public class ChromeUtil {
         } catch (Exception e) {
             log.error("执行出错:" + e.toString());
         }
-        if(headless){
+        if (headless) {
             //无浏览器窗口模式执行完毕需要关闭对应的webDriver
             if (enableMob) {
                 browserMobProxy.stop();
