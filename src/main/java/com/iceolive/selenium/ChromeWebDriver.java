@@ -16,6 +16,9 @@ import net.lightbody.bmp.proxy.CaptureType;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.chromium.ChromiumDriver;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.Interactive;
 import org.openqa.selenium.interactions.Sequence;
@@ -42,7 +45,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScreenshot, Interactive, HasCapabilities {
 
-    private ChromeDriver webDriver;
+    private ChromiumDriver webDriver;
 
     private Map<String, Object> variableMap = new HashMap<>();
 
@@ -55,37 +58,62 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     Actions builder = null;
 
     public ChromeWebDriver(String path, boolean headless) {
-        File chromeDriverPath = new File(path);
-        System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
-        ChromeOptions chromeOptions = new ChromeOptions();
-        if (headless) {
-            chromeOptions.addArguments("headless");
-        }
-        //去除 window.navigator.webdriver
-        chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+        if (path.endsWith("msedgedriver.exe")) {
+            EdgeOptions edgeOptions = new EdgeOptions();
+            if (headless) {
+                edgeOptions.addArguments("headless");
+            }
+            //去除 window.navigator.webdriver
+            edgeOptions.addArguments("disable-blink-features=AutomationControlled");
+            webDriver = new EdgeDriver(edgeOptions);
+        } else {
+            File chromeDriverPath = new File(path);
+            System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
+            ChromeOptions chromeOptions = new ChromeOptions();
+            if (headless) {
+                chromeOptions.addArguments("headless");
+            }
+            //去除 window.navigator.webdriver
+            chromeOptions.addArguments("disable-blink-features=AutomationControlled");
 
-        webDriver = new ChromeDriver(chromeOptions);
+            webDriver = new ChromeDriver(chromeOptions);
+        }
     }
 
     public ChromeWebDriver(String path, boolean headless, BrowserMobProxy browserMobProxy) {
         this.proxy = browserMobProxy;
         proxy.enableHarCaptureTypes(CaptureType.REQUEST_HEADERS, CaptureType.REQUEST_CONTENT, CaptureType.REQUEST_BINARY_CONTENT, CaptureType.REQUEST_COOKIES, CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT, CaptureType.RESPONSE_BINARY_CONTENT, CaptureType.RESPONSE_COOKIES);
         Proxy seleniumProxy = ClientUtil.createSeleniumProxy(browserMobProxy);
-        File chromeDriverPath = new File(path);
-        System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
-        ChromeOptions chromeOptions = new ChromeOptions();
-        if (headless) {
-            chromeOptions.addArguments("headless");
-        }
-        chromeOptions.setProxy(seleniumProxy);
-        //去除 window.navigator.webdriver
-        chromeOptions.addArguments("disable-blink-features=AutomationControlled");
-        //忽略证书错误
-        chromeOptions.addArguments("ignore-certificate-errors");
-        //忽略证书访问
-        chromeOptions.addArguments("ignore-urlfetcher-cert-requests");
-        webDriver = new ChromeDriver(chromeOptions);
 
+        if (path.endsWith("msedgedriver.exe")) {
+            EdgeOptions edgeOptions = new EdgeOptions();
+            if (headless) {
+                edgeOptions.addArguments("headless");
+            }
+            edgeOptions.setProxy(seleniumProxy);
+            //去除 window.navigator.webdriver
+            edgeOptions.addArguments("disable-blink-features=AutomationControlled");
+            //忽略证书错误
+            edgeOptions.addArguments("ignore-certificate-errors");
+            //忽略证书访问
+            edgeOptions.addArguments("ignore-urlfetcher-cert-requests");
+            webDriver = new EdgeDriver(edgeOptions);
+        } else {
+            File chromeDriverPath = new File(path);
+            System.setProperty("webdriver.chrome.driver", chromeDriverPath.getAbsolutePath());
+            ChromeOptions chromeOptions = new ChromeOptions();
+            if (headless) {
+                chromeOptions.addArguments("headless");
+            }
+            chromeOptions.setProxy(seleniumProxy);
+            //去除 window.navigator.webdriver
+            chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+            //忽略证书错误
+            chromeOptions.addArguments("ignore-certificate-errors");
+            //忽略证书访问
+            chromeOptions.addArguments("ignore-urlfetcher-cert-requests");
+            webDriver = new ChromeDriver(chromeOptions);
+        }
 
     }
 
@@ -196,7 +224,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 }
                 script = script.replace("\n", "\r\n");
                 FileUtil.writeToFile(filename, script, "GBK");
-                String s = CmdUtil.callCmd("wscript",filename);
+                String s = CmdUtil.callCmd("wscript", filename);
                 if (StringUtil.isNotEmpty(target)) {
                     variableMap.put(target, s);
                 }
@@ -303,14 +331,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             } else if ("open".equals(command)) {
                 try {
                     webDriver.get(target);
-                }catch(Exception e){
+                } catch (Exception e) {
                     try {
-                        WebDriverWait wait = new WebDriverWait(webDriver,  Duration.ofSeconds(3));
+                        WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(3));
                         wait.until(ExpectedConditions.urlMatches(target));
                     } catch (TimeoutException e1) {
-                        throw new RuntimeException("open超时",e1);
-                    }catch(Exception e2){
-                        throw new RuntimeException("open异常",e2);
+                        throw new RuntimeException("open超时", e1);
+                    } catch (Exception e2) {
+                        throw new RuntimeException("open异常", e2);
                     }
                 }
             } else if ("clear".equals(command)) {
@@ -327,14 +355,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
             } else if ("repeat".equals(command)) {
                 if (target != null) {
-                    if(variableMap.containsKey(target)){
+                    if (variableMap.containsKey(target)) {
                         List<Object> list2 = (List<Object>) variableMap.get(target);
-                        for(int j =0;j<list2.size();j++){
-                            if(StringUtil.isNotEmpty(value)){
-                                variableMap.put(value,j);
+                        for (int j = 0; j < list2.size(); j++) {
+                            if (StringUtil.isNotEmpty(value)) {
+                                variableMap.put(value, j);
                             }
-                            if(StringUtil.isNotEmpty(timeout)){
-                                variableMap.put(timeout,list2.get(j));
+                            if (StringUtil.isNotEmpty(timeout)) {
+                                variableMap.put(timeout, list2.get(j));
                             }
                             if (item.getStatement() != null) {
                                 String statement1 = "var _$map = arguments[0];" + item.getStatement();
@@ -346,12 +374,12 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                                 run(item.getRepeatCommands());
                             }
                         }
-                    }else{
+                    } else {
                         int count = Integer.parseInt(target);
                         int $index = 0;
                         while (count > 0) {
-                            if(StringUtil.isNotEmpty(value)){
-                                variableMap.put(value,$index++);
+                            if (StringUtil.isNotEmpty(value)) {
+                                variableMap.put(value, $index++);
                             }
                             if (item.getStatement() != null) {
                                 String statement1 = "var _$map = arguments[0];" + item.getStatement();
@@ -401,7 +429,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isEmpty(timeout)) {
                         timeout = "3";
                     }
-                    WebDriverWait wait = new WebDriverWait(webDriver,Duration.ofSeconds(Integer.parseInt(timeout)));
+                    WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(Integer.parseInt(timeout)));
                     if ("visible".equals(value)) {
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(target)));
                     } else if ("url".equals(value)) {
@@ -476,7 +504,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (StringUtil.isEmpty(timeout)) {
                         timeout = "3";
                     }
-                    WebDriverWait wait = new WebDriverWait(webDriver,Duration.ofSeconds(Integer.parseInt(timeout)));
+                    WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(Integer.parseInt(timeout)));
                     wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#__prompt__")));
                     String text = webDriver.findElement(By.cssSelector("#__prompt__ input")).getAttribute("value");
                     variableMap.put(target, text);
@@ -946,7 +974,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
         sb.append("  var content = document.createElement('p');\n");
         sb.append("  content.setAttribute('style','margin-top:70px;overflow:auto;height:80px');\n");
-        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'").replace("\n","<br>") + "';\n");
+        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'").replace("\n", "<br>") + "';\n");
         sb.append("  div.appendChild(content);\n");
 
         sb.append("  var closeBtn = document.createElement('span');\n");
@@ -987,7 +1015,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
         sb.append("  var content = document.createElement('p');\n");
         sb.append("  content.setAttribute('style','margin-top:50px;');\n");
-        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'").replace("\n","<br>") + "';\n");
+        sb.append("  content.innerHTML = '" + msg.replace("'", "\\'").replace("\n", "<br>") + "';\n");
         sb.append("  var input = document.createElement('input');\n");
         sb.append("  input.style.width='80%';\n");
         sb.append("  div.appendChild(content);\n");

@@ -10,7 +10,6 @@ import org.java_websocket.server.WebSocketServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 /**
  * @author wangmianzhe
@@ -46,8 +45,8 @@ public class ChromeServer extends WebSocketServer {
         if (jsonObject.get("proxy") != null) {
             proxy = jsonObject.get("proxy").asText();
         }
-        String driver = System.getProperty("user.dir") + "\\chromedriver.exe";
         try {
+            String driver = ChromeUtil.getDriver();
             ChromeUtil.runScript(script, driver, proxy);
         } catch (IOException e) {
             e.printStackTrace();
