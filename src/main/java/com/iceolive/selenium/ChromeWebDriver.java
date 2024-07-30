@@ -65,6 +65,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             }
             //去除 window.navigator.webdriver
             edgeOptions.addArguments("disable-blink-features=AutomationControlled");
+            Map<String, Object> prefs = new LinkedHashMap<>();
+            prefs.put("user_experience_metrics.personalization_data_consent_enabled", Boolean.valueOf(true));
+            edgeOptions.setExperimentalOption("prefs", prefs);
             webDriver = new EdgeDriver(edgeOptions);
         } else {
             File chromeDriverPath = new File(path);
@@ -97,6 +100,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             edgeOptions.addArguments("ignore-certificate-errors");
             //忽略证书访问
             edgeOptions.addArguments("ignore-urlfetcher-cert-requests");
+            Map<String, Object> prefs = new LinkedHashMap<>();
+            prefs.put("user_experience_metrics.personalization_data_consent_enabled", Boolean.valueOf(true));
+            edgeOptions.setExperimentalOption("prefs", prefs);
             webDriver = new EdgeDriver(edgeOptions);
         } else {
             File chromeDriverPath = new File(path);
