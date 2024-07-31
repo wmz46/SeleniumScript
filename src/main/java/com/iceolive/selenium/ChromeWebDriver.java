@@ -123,6 +123,53 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     }
 
+    private Object getValueByKey(String exp, Object data) {
+        if(data == null){
+            throw new NullPointerException();
+        }
+        if(!(data instanceof List) && !(data instanceof Map) ){
+            throw new IllegalArgumentException();
+        }
+        Object value = null;
+        if (exp.startsWith("[") && data instanceof List) {
+            Matcher matcher = Pattern.compile("^\\[(\\d+)\\]").matcher(exp);
+            if (matcher.find()) {
+                String key = matcher.group(1);
+                value = ((List<Object>) data).get(Integer.valueOf(key));
+                if (exp.length() > key.length() + 2) {
+                    value = getValueByKey(exp.substring(key.length() + 2), value);
+                }
+            }
+        } else if (exp.startsWith(".")) {
+            Matcher matcher = Pattern.compile("^\\.([^.\\[]+)").matcher(exp);
+            if (matcher.find()) {
+                String key = matcher.group(1);
+                if (data instanceof List) {
+                    value = ((List<Object>) data).get(Integer.valueOf(key));
+                } else if (data instanceof Map) {
+                    value = ((Map<String, Object>) data).get(key);
+                }
+                if (exp.length() > key.length() + 1) {
+                    value = getValueByKey(exp.substring(key.length() + 1), value);
+                }
+            }
+        } else {
+            Matcher matcher = Pattern.compile("^([^.\\[]+)").matcher(exp);
+            if (matcher.find()) {
+                String key = matcher.group(1);
+                if (data instanceof List) {
+                    value = ((List<Object>) data).get(Integer.valueOf(key));
+                    value = getValueByKey(exp.substring(key.length()), value);
+                } else if (data instanceof Map) {
+                    value = ((Map<String, Object>) data).get(key);
+                    value = getValueByKey(exp.substring(key.length()), value);
+                }
+            }
+
+        }
+        return value;
+    }
+
     /**
      * 替换变量，替换%变量名%
      *
@@ -136,9 +183,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         Matcher matcher = Pattern.compile("%(.*?)%").matcher(str);
         while (matcher.find()) {
             String key = matcher.group(1);
-            if (variableMap.containsKey(key)) {
-                str = str.replace("%" + key + "%", String.valueOf(variableMap.get(key)));
-            }
+            str = str.replace("%" + key + "%", String.valueOf(getValueByKey(key, variableMap)));
         }
         return str;
     }
@@ -152,6 +197,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 return;
             }
             SeleniumCmd item = list.get(i);
+            log.info(item.toString());
             String command = item.getCommand();
             String target = replaceVariable(item.getArg1());
             String value = replaceVariable(item.getArg2());
@@ -159,7 +205,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             String password = replaceVariable(item.getArg4());
             String statement = item.getStatement();
             String sqlStatement = item.getSqlStatement();
-            log.info(item.toString());
             if ("newStw".equals(command)) {
                 variableMap.put(target, System.currentTimeMillis());
             } else if ("endStw".equals(command)) {
