@@ -24,18 +24,12 @@ public class EdgeUtil {
             log.error("请先安装edge浏览器");
             return false;
         }
-        version = version.split("\\.")[0];
+
         Request request;
         Response response;
         String downloadUrl; 
-        String url =  "https://msedgedriver.azureedge.net/LATEST_RELEASE_" + version;
-        request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-        response = client.newCall(request).execute();
-        String fullVersion = response.body().string();
-        downloadUrl =  "https://msedgedriver.azureedge.net/" + fullVersion + "/edgedriver_win64.zip";
+
+        downloadUrl =  "https://msedgedriver.azureedge.net/" + version + "/edgedriver_win64.zip";
         log.info("开始下载edgedriver...");
         request = new Request.Builder().url(downloadUrl).build();
         response = client.newCall(request).execute();

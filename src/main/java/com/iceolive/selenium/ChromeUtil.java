@@ -64,7 +64,7 @@ public class ChromeUtil {
                         .get()
                         .build();
                 response = client.newCall(request).execute();
-                String fullVersion = response.body().string();
+                String fullVersion = response.body().string().trim();
                 downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
             } else {
                 String url = "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_" + version;
@@ -73,7 +73,7 @@ public class ChromeUtil {
                         .get()
                         .build();
                 response = client.newCall(request).execute();
-                String fullVersion = response.body().string();
+                String fullVersion = response.body().string().trim();
                 downloadUrl = "https://storage.googleapis.com/chrome-for-testing-public" + "/" + fullVersion + "/win32/chromedriver-win32.zip";
             }
 
