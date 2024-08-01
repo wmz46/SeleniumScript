@@ -97,7 +97,7 @@ const cmOptions = {
       let inTag = false;
       for (let i = 0; i < arr.length; i++) {
         let cmd = arr[i].match(/^\s*([\/<a-zA-Z>]+)\s*/)?.[1]
-        if (['end', '<\/script>', '<\/sql>'].indexOf(cmd) > -1) {
+        if (['end', 'else', '<\/script>', '<\/sql>'].indexOf(cmd) > -1) {
           if (['<\/script>', '<\/sql>'].indexOf(cmd) > -1) {
             inTag = false
           }
@@ -258,5 +258,4 @@ const proxy = ref('')
   </el-container>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>
