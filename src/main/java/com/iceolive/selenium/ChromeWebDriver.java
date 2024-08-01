@@ -57,14 +57,18 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     Actions builder = null;
 
-    public ChromeWebDriver(String path, boolean headless) {
+    public ChromeWebDriver(String path, boolean headless,boolean guest) {
         if (path.endsWith("msedgedriver.exe")) {
             EdgeOptions edgeOptions = new EdgeOptions();
             if (headless) {
                 edgeOptions.addArguments("headless");
             }
+            if(guest){
+                edgeOptions.addArguments("guest");
+            }
             //去除 window.navigator.webdriver
             edgeOptions.addArguments("disable-blink-features=AutomationControlled");
+
             Map<String, Object> prefs = new LinkedHashMap<>();
             prefs.put("user_experience_metrics.personalization_data_consent_enabled", Boolean.valueOf(true));
             edgeOptions.setExperimentalOption("prefs", prefs);
@@ -76,6 +80,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             if (headless) {
                 chromeOptions.addArguments("headless");
             }
+            if(guest){
+                chromeOptions.addArguments("guest");
+            }
             //去除 window.navigator.webdriver
             chromeOptions.addArguments("disable-blink-features=AutomationControlled");
 
@@ -83,7 +90,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         }
     }
 
-    public ChromeWebDriver(String path, boolean headless, BrowserMobProxy browserMobProxy) {
+    public ChromeWebDriver(String path, boolean headless,boolean guest, BrowserMobProxy browserMobProxy) {
         this.proxy = browserMobProxy;
         proxy.enableHarCaptureTypes(CaptureType.REQUEST_HEADERS, CaptureType.REQUEST_CONTENT, CaptureType.REQUEST_BINARY_CONTENT, CaptureType.REQUEST_COOKIES, CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT, CaptureType.RESPONSE_BINARY_CONTENT, CaptureType.RESPONSE_COOKIES);
         Proxy seleniumProxy = ClientUtil.createSeleniumProxy(browserMobProxy);
@@ -92,6 +99,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             EdgeOptions edgeOptions = new EdgeOptions();
             if (headless) {
                 edgeOptions.addArguments("headless");
+            }
+            if(guest){
+                edgeOptions.addArguments("guest");
             }
             edgeOptions.setProxy(seleniumProxy);
             //去除 window.navigator.webdriver
@@ -110,6 +120,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             ChromeOptions chromeOptions = new ChromeOptions();
             if (headless) {
                 chromeOptions.addArguments("headless");
+            }
+            if(guest){
+                chromeOptions.addArguments("guest");
             }
             chromeOptions.setProxy(seleniumProxy);
             //去除 window.navigator.webdriver
@@ -463,8 +476,6 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         }
                     }
                 }
-
-            } else if ("setConn".equals(command)) {
 
             } else if ("when".equals(command)) {
                 statement = "var _$map = arguments[0];" + statement;
