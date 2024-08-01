@@ -18,7 +18,9 @@ java -jar SeleniumScript.jar -script "D://你的测试脚本.txt"
 :: 指定驱动路径
 java -jar SeleniumScript.jar -script "D://你的测试脚本.txt" -driver "D://chromedriver.exe"
 :: 以websocket服务启动,当需执行脚本非本地文件存储时使用。
-java -jar SeleniumScript.jar -ws
+java -jar SeleniumScript.jar -ws 
+:: 默认websocket服务只能本机访问，如需暴露给其他机器使用，请添加-host
+java -jar SeleniumScript.jar -ws -host
 ```
 
 ### 测试脚本

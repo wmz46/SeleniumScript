@@ -128,6 +128,7 @@ public class ChromeUtil {
         String driver = getDriver();
         String proxy = null;
         boolean isServer = false;
+        boolean host = false;
         int port = 10042;
         for (int i = 0; args != null && i < args.length; i++) {
             String arg = args[i];
@@ -143,10 +144,13 @@ public class ChromeUtil {
                 isServer = true;
             } else if (arg.equals("-p")) {
                 port = Integer.parseInt(args[++i]);
+            } else if(arg.equals("-host")){
+                host = true;
             }
+
         }
         if (isServer) {
-            ChromeServer chromeServer = new ChromeServer(port);
+            ChromeServer chromeServer = new ChromeServer(port,host);
             chromeServer.start();
         } else {
             log.info("当前版本：" + VersionUtil.getVersion());

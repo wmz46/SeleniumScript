@@ -17,10 +17,13 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class ChromeServer extends WebSocketServer {
     private Integer port;
+    private boolean host;
 
-    public ChromeServer(int port) {
-        super(new InetSocketAddress(port));
+
+    public ChromeServer(int port, boolean host) {
+        super(host ? new InetSocketAddress(port) : new InetSocketAddress("localhost", port));
         this.port = port;
+        this.host = host;
     }
 
     @Override
@@ -61,6 +64,9 @@ public class ChromeServer extends WebSocketServer {
     @Override
     public void onStart() {
         log.info("本地服务启动成功 端口：" + this.port + "  当前版本：" + VersionUtil.getVersion());
+        if(!host){
+            log.info("如需暴露给其他机器访问，请添加“-host”参数");
+        }
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
     }
