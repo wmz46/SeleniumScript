@@ -619,6 +619,17 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 builder.release();
                 builder.perform();
 
+            }else if("getWindowHandle".equals(command)){
+                String handle = webDriver.getWindowHandle();
+                variableMap.put(target, handle);
+            }else if("getWindowHandles".equals(command)){
+                Set<String> handles = webDriver.getWindowHandles();
+                //转list
+                List<String> handlesList = new ArrayList<>();
+                handles.forEach(handlesList::add);
+                variableMap.put(target, handlesList);
+            }else if("switchWindow".equals(command)){
+                webDriver.switchTo().window(target);
             }
         }
 
