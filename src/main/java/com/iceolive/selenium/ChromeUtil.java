@@ -191,7 +191,15 @@ public class ChromeUtil {
                 } else {
                     webDriver = new ChromeWebDriver(driver, headless,guest);
                 }
-            } else {
+            }else if(e.getMessage().contains("only supports Microsoft Edge version")){
+                log.error("edgedriver版本不匹配！");
+                EdgeUtil.downloadDriver();
+                if (enableMob) {
+                    webDriver = new ChromeWebDriver(driver, headless,guest, browserMobProxy);
+                } else {
+                    webDriver = new ChromeWebDriver(driver, headless,guest);
+                }
+            }else {
                 throw e;
             }
         }
