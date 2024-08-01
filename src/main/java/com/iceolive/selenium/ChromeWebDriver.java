@@ -162,7 +162,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     value = getValueByKey(exp.substring(key.length()), value);
                 } else if (data instanceof Map) {
                     value = ((Map<String, Object>) data).get(key);
-                    value = getValueByKey(exp.substring(key.length()), value);
+                    if(exp.length()>key.length()) {
+                        value = getValueByKey(exp.substring(key.length()), value);
+                    }
                 }
             }
 
@@ -406,26 +408,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
             } else if ("repeat".equals(command)) {
                 if (target != null) {
-                    if (variableMap.containsKey(target)) {
-                        List<Object> list2 = (List<Object>) variableMap.get(target);
-                        for (int j = 0; j < list2.size(); j++) {
-                            if (StringUtil.isNotEmpty(value)) {
-                                variableMap.put(value, j);
-                            }
-                            if (StringUtil.isNotEmpty(timeout)) {
-                                variableMap.put(timeout, list2.get(j));
-                            }
-                            if (item.getStatement() != null) {
-                                String statement1 = "var _$map = arguments[0];" + item.getStatement();
-                                if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
-                                    break;
-                                }
-                            }
-                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
-                                run(item.getRepeatCommands());
-                            }
-                        }
-                    } else {
+                    if(Pattern.matches("^\\d+$", target)){
                         int count = Integer.parseInt(target);
                         int $index = 0;
                         while (count > 0) {
@@ -442,6 +425,25 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                                 run(item.getRepeatCommands());
                             }
                             count--;
+                        }
+                    }else  {
+                        List<Object> list2 = (List<Object>) getValueByKey(target, variableMap);
+                        for (int j = 0; j < list2.size(); j++) {
+                            if (StringUtil.isNotEmpty(value)) {
+                                variableMap.put(value, j);
+                            }
+                            if (StringUtil.isNotEmpty(timeout)) {
+                                variableMap.put(timeout, list2.get(j));
+                            }
+                            if (item.getStatement() != null) {
+                                String statement1 = "var _$map = arguments[0];" + item.getStatement();
+                                if (!(Boolean) webDriver.executeScript(statement1, variableMap)) {
+                                    break;
+                                }
+                            }
+                            if (item.getRepeatCommands() != null && !item.getRepeatCommands().isEmpty()) {
+                                run(item.getRepeatCommands());
+                            }
                         }
                     }
 
