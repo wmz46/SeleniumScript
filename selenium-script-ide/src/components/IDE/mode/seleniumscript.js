@@ -38,7 +38,7 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
     'setConn', 'querySql', 'execSql', 'cmd', 'wscript', '#headless', 'newStw', 'endStw',
     'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
     'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot',
-    'begin', 'then', 'else', 'end',
+    'begin', 'then', 'else', 'end','#guest'
   ]
   var sqlKeywords = " alter and as asc between by count create delete desc distinct drop from group having in insert into is join like not on or order select set table union update values where limit ";
 
