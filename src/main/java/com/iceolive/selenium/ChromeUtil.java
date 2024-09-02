@@ -206,10 +206,18 @@ public class ChromeUtil {
         ChromeWebDriver finalWebDriver = webDriver;
         boolean finalEnableMob = enableMob;
         webDriver.addWebDriverCloseEvent(() -> {
-            if (finalEnableMob) {
-                browserMobProxy.stop();
+            int windowCount = 0;
+            try {
+                windowCount = finalWebDriver.getWindowHandles().size();
+            }catch (Exception e) {
+                windowCount = 0;
             }
-            finalWebDriver.quit();
+            if (windowCount == 0) {
+                if (finalEnableMob) {
+                    browserMobProxy.stop();
+                }
+                finalWebDriver.quit();
+            }
         });
         try {
             webDriver.run(script);
