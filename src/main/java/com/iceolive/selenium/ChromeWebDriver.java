@@ -511,9 +511,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     log.error("wait超时:" + item);
                 }
             } else if ("saveJson".equals(command)) {
-                download(target, value, "json");
+                download(target, value, "json",null);
             } else if ("saveCsv".equals(command)) {
-                download(target, value, "csv");
+                download(target, value, "csv",timeout);
             } else if ("log".equals(command)) {
                 //输出日志
                 log.info("      -> " + target);
@@ -975,7 +975,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         }));
     }
 
-    public void download(String key, String filename, String type) {
+    public void download(String key, String filename, String type,String columns) {
         if (!variableMap.containsKey(key)) {
             return;
         }
@@ -986,9 +986,12 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             sb.append("  let rowDelimiter = '\\r\\n';\n");
             sb.append("  let csv = '';\n");
             sb.append("  let rows = arguments[0]['" + key + "'];\n");
-            ;
             sb.append("  if (Array.isArray(rows) && rows.length > 0) {\n");
-            sb.append("    let columns = Object.keys(rows[0]);\n");
+            if(StringUtil.isEmpty(columns)) {
+                sb.append("    let columns = Object.keys(rows[0]);\n");
+            }else{
+                sb.append("  let columns='" + columns + "'.split(',');\n");
+            }
             sb.append("    csv = columns.reduce((previous, column) => {\n");
             sb.append("      return (previous ? previous + columnDelimiter : '') + column;\n");
             sb.append("    }, '');\n");
