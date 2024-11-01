@@ -688,14 +688,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         if (elseLineNum != null) {
                             String[] elseLines = new String[endLineNum - elseLineNum - 1];
                             System.arraycopy(lines, elseLineNum + 1, elseLines, 0, endLineNum - elseLineNum - 1);
-                            seleniumCmd.setElseCommands(parse(elseLines, elseLineNum + 1));
+                            seleniumCmd.setElseCommands(parse(elseLines, startLineNum+elseLineNum + 1));
                             String[] thenLines = new String[elseLineNum - thenLineNum - 1];
                             System.arraycopy(lines, thenLineNum + 1, thenLines, 0, elseLineNum - thenLineNum - 1);
-                            seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
+                            seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
                         } else {
                             String[] thenLines = new String[endLineNum - thenLineNum - 1];
                             System.arraycopy(lines, thenLineNum + 1, thenLines, 0, endLineNum - thenLineNum - 1);
-                            seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
+                            seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
                         }
                     }
                     list.add(seleniumCmd);
@@ -743,14 +743,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             if (elseLineNum != null) {
                                 String[] elseLines = new String[endLineNum - elseLineNum - 1];
                                 System.arraycopy(lines, elseLineNum + 1, elseLines, 0, endLineNum - elseLineNum - 1);
-                                seleniumCmd.setElseCommands(parse(elseLines, elseLineNum + 1));
+                                seleniumCmd.setElseCommands(parse(elseLines, startLineNum+elseLineNum + 1));
                                 String[] thenLines = new String[elseLineNum - thenLineNum - 1];
                                 System.arraycopy(lines, thenLineNum + 1, thenLines, 0, elseLineNum - thenLineNum - 1);
-                                seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
+                                seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
                             } else {
                                 String[] thenLines = new String[endLineNum - thenLineNum - 1];
                                 System.arraycopy(lines, thenLineNum + 1, thenLines, 0, endLineNum - thenLineNum - 1);
-                                seleniumCmd.setThenCommands(parse(thenLines, thenLineNum + 1));
+                                seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
                             }
                         }
                         i = endLineNum;
@@ -792,7 +792,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     String[] repeatLines = new String[endLineNum - beginLineNum - 1];
                     System.arraycopy(lines, beginLineNum + 1, repeatLines, 0, endLineNum - beginLineNum - 1);
 
-                    seleniumCmd.setRepeatCommands(parse(repeatLines, beginLineNum + 1));
+                    seleniumCmd.setRepeatCommands(parse(repeatLines, startLineNum+beginLineNum + 1));
                 }
                 list.add(seleniumCmd);
             } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd() || seleniumCmd.isWinCmd() || seleniumCmd.isWscript()) {
