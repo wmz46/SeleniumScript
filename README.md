@@ -472,3 +472,16 @@ getWindowHandles ids
 // 第二个参数为窗口句柄
 switchWindow 7AEAE4DD9BA147414900601C0D4CFFCF
 ```
+### 41.持久化变量
+```js
+//a为持久化的key
+//b为变量的key
+setStore a b
+```
+### 42.获取持久化变量
+```js
+//a为持久化的key 
+//b为变量的key
+//c为可选参数，表示默认值。如果没有持久化数据，则返回默认值，只支持字符串默认值
+getStore a b c
+```

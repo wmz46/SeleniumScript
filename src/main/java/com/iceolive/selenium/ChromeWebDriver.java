@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScreenshot, Interactive, HasCapabilities {
 
+    private final String localStorePath = System.getProperty("user.dir") + File.separator + "localStore.json";
     private ChromiumDriver webDriver;
 
     private Map<String, Object> variableMap = new HashMap<>();
@@ -57,13 +58,13 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
 
     Actions builder = null;
 
-    public ChromeWebDriver(String path, boolean headless,boolean guest) {
+    public ChromeWebDriver(String path, boolean headless, boolean guest) {
         if (path.endsWith("msedgedriver.exe")) {
             EdgeOptions edgeOptions = new EdgeOptions();
             if (headless) {
                 edgeOptions.addArguments("headless");
             }
-            if(guest){
+            if (guest) {
                 edgeOptions.addArguments("guest");
             }
             //去除 window.navigator.webdriver
@@ -80,7 +81,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             if (headless) {
                 chromeOptions.addArguments("headless");
             }
-            if(guest){
+            if (guest) {
                 chromeOptions.addArguments("guest");
             }
             //去除 window.navigator.webdriver
@@ -90,7 +91,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         }
     }
 
-    public ChromeWebDriver(String path, boolean headless,boolean guest, BrowserMobProxy browserMobProxy) {
+    public ChromeWebDriver(String path, boolean headless, boolean guest, BrowserMobProxy browserMobProxy) {
         this.proxy = browserMobProxy;
         proxy.enableHarCaptureTypes(CaptureType.REQUEST_HEADERS, CaptureType.REQUEST_CONTENT, CaptureType.REQUEST_BINARY_CONTENT, CaptureType.REQUEST_COOKIES, CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT, CaptureType.RESPONSE_BINARY_CONTENT, CaptureType.RESPONSE_COOKIES);
         Proxy seleniumProxy = ClientUtil.createSeleniumProxy(browserMobProxy);
@@ -100,7 +101,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             if (headless) {
                 edgeOptions.addArguments("headless");
             }
-            if(guest){
+            if (guest) {
                 edgeOptions.addArguments("guest");
             }
             edgeOptions.setProxy(seleniumProxy);
@@ -121,7 +122,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             if (headless) {
                 chromeOptions.addArguments("headless");
             }
-            if(guest){
+            if (guest) {
                 chromeOptions.addArguments("guest");
             }
             chromeOptions.setProxy(seleniumProxy);
@@ -137,10 +138,10 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
     }
 
     private Object getValueByKey(String exp, Object data) {
-        if(data == null){
+        if (data == null) {
             throw new NullPointerException();
         }
-        if(!(data instanceof List) && !(data instanceof Map) ){
+        if (!(data instanceof List) && !(data instanceof Map)) {
             throw new IllegalArgumentException();
         }
         Object value = null;
@@ -175,7 +176,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     value = getValueByKey(exp.substring(key.length()), value);
                 } else if (data instanceof Map) {
                     value = ((Map<String, Object>) data).get(key);
-                    if(exp.length()>key.length()) {
+                    if (exp.length() > key.length()) {
                         value = getValueByKey(exp.substring(key.length()), value);
                     }
                 }
@@ -366,6 +367,24 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 }
                 log.info("      -> " + obj);
                 variableMap.put(target, obj);
+            } else if ("setStore".equals(command)) {
+                String storeKey = target;
+                String variableName = value;
+                Object o = variableMap.get(variableName);
+                Map<String, Object> localStore = JsonUtil.loadJson(localStorePath);
+                localStore.put(storeKey, o);
+                JsonUtil.saveJson(localStorePath, localStore);
+
+            } else if ("getStore".equals(command)) {
+                String storeKey = target;
+                String variableName = value;
+                String defaultValue = timeout;
+                Map<String, Object> localStore = JsonUtil.loadJson(localStorePath);
+                if (localStore.containsKey(storeKey)) {
+                    variableMap.put(variableName, localStore.get(storeKey));
+                } else {
+                    variableMap.put(variableName, StringUtil.isEmpty(defaultValue) ? null : defaultValue);
+                }
             } else if ("alert".equals(command)) {
                 this.alert(target);
             } else if ("exec".equals(command)) {
@@ -421,7 +440,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 builder.dragAndDropBy(element, Integer.parseInt(value.split(",")[0].trim()), Integer.parseInt(value.split(",")[1].trim())).perform();
             } else if ("repeat".equals(command)) {
                 if (target != null) {
-                    if(Pattern.matches("^\\d+$", target)){
+                    if (Pattern.matches("^\\d+$", target)) {
                         int count = Integer.parseInt(target);
                         int $index = 0;
                         while (count > 0) {
@@ -439,7 +458,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             }
                             count--;
                         }
-                    }else  {
+                    } else {
                         List<Object> list2 = (List<Object>) getValueByKey(target, variableMap);
                         for (int j = 0; j < list2.size(); j++) {
                             if (StringUtil.isNotEmpty(value)) {
@@ -511,9 +530,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     log.error("wait超时:" + item);
                 }
             } else if ("saveJson".equals(command)) {
-                download(target, value, "json",null);
+                download(target, value, "json", null);
             } else if ("saveCsv".equals(command)) {
-                download(target, value, "csv",timeout);
+                download(target, value, "csv", timeout);
             } else if ("log".equals(command)) {
                 //输出日志
                 log.info("      -> " + target);
@@ -619,16 +638,16 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 builder.release();
                 builder.perform();
 
-            }else if("getWindowHandle".equals(command)){
+            } else if ("getWindowHandle".equals(command)) {
                 String handle = webDriver.getWindowHandle();
                 variableMap.put(target, handle);
-            }else if("getWindowHandles".equals(command)){
+            } else if ("getWindowHandles".equals(command)) {
                 Set<String> handles = webDriver.getWindowHandles();
                 //转list
                 List<String> handlesList = new ArrayList<>();
                 handles.forEach(handlesList::add);
                 variableMap.put(target, handlesList);
-            }else if("switchWindow".equals(command)){
+            } else if ("switchWindow".equals(command)) {
                 webDriver.switchTo().window(target);
             }
         }
@@ -688,14 +707,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                         if (elseLineNum != null) {
                             String[] elseLines = new String[endLineNum - elseLineNum - 1];
                             System.arraycopy(lines, elseLineNum + 1, elseLines, 0, endLineNum - elseLineNum - 1);
-                            seleniumCmd.setElseCommands(parse(elseLines, startLineNum+elseLineNum + 1));
+                            seleniumCmd.setElseCommands(parse(elseLines, startLineNum + elseLineNum + 1));
                             String[] thenLines = new String[elseLineNum - thenLineNum - 1];
                             System.arraycopy(lines, thenLineNum + 1, thenLines, 0, elseLineNum - thenLineNum - 1);
-                            seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
+                            seleniumCmd.setThenCommands(parse(thenLines, startLineNum + thenLineNum + 1));
                         } else {
                             String[] thenLines = new String[endLineNum - thenLineNum - 1];
                             System.arraycopy(lines, thenLineNum + 1, thenLines, 0, endLineNum - thenLineNum - 1);
-                            seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
+                            seleniumCmd.setThenCommands(parse(thenLines, startLineNum + thenLineNum + 1));
                         }
                     }
                     list.add(seleniumCmd);
@@ -743,14 +762,14 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                             if (elseLineNum != null) {
                                 String[] elseLines = new String[endLineNum - elseLineNum - 1];
                                 System.arraycopy(lines, elseLineNum + 1, elseLines, 0, endLineNum - elseLineNum - 1);
-                                seleniumCmd.setElseCommands(parse(elseLines, startLineNum+elseLineNum + 1));
+                                seleniumCmd.setElseCommands(parse(elseLines, startLineNum + elseLineNum + 1));
                                 String[] thenLines = new String[elseLineNum - thenLineNum - 1];
                                 System.arraycopy(lines, thenLineNum + 1, thenLines, 0, elseLineNum - thenLineNum - 1);
-                                seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
+                                seleniumCmd.setThenCommands(parse(thenLines, startLineNum + thenLineNum + 1));
                             } else {
                                 String[] thenLines = new String[endLineNum - thenLineNum - 1];
                                 System.arraycopy(lines, thenLineNum + 1, thenLines, 0, endLineNum - thenLineNum - 1);
-                                seleniumCmd.setThenCommands(parse(thenLines, startLineNum+thenLineNum + 1));
+                                seleniumCmd.setThenCommands(parse(thenLines, startLineNum + thenLineNum + 1));
                             }
                         }
                         i = endLineNum;
@@ -792,7 +811,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     String[] repeatLines = new String[endLineNum - beginLineNum - 1];
                     System.arraycopy(lines, beginLineNum + 1, repeatLines, 0, endLineNum - beginLineNum - 1);
 
-                    seleniumCmd.setRepeatCommands(parse(repeatLines, startLineNum+beginLineNum + 1));
+                    seleniumCmd.setRepeatCommands(parse(repeatLines, startLineNum + beginLineNum + 1));
                 }
                 list.add(seleniumCmd);
             } else if (seleniumCmd.isSetCmd() || seleniumCmd.isExecCmd() || seleniumCmd.isWinCmd() || seleniumCmd.isWscript()) {
@@ -975,7 +994,7 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
         }));
     }
 
-    public void download(String key, String filename, String type,String columns) {
+    public void download(String key, String filename, String type, String columns) {
         if (!variableMap.containsKey(key)) {
             return;
         }
@@ -987,9 +1006,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             sb.append("  let csv = '';\n");
             sb.append("  let rows = arguments[0]['" + key + "'];\n");
             sb.append("  if (Array.isArray(rows) && rows.length > 0) {\n");
-            if(StringUtil.isEmpty(columns)) {
+            if (StringUtil.isEmpty(columns)) {
                 sb.append("    let columns = Object.keys(rows[0]);\n");
-            }else{
+            } else {
                 sb.append("  let columns='" + columns + "'.split(',');\n");
             }
             sb.append("    csv = columns.reduce((previous, column) => {\n");
