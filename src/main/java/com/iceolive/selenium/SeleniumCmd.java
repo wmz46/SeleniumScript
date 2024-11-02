@@ -29,7 +29,7 @@ public class SeleniumCmd {
     }
 
     public boolean isSetCmd() {
-        return "set".equals(this.command) || "setAsync".equals(this.command);
+        return "set".equals(this.command) || "setAsync".equals(this.command) || "setStore".equals(this.command);
     }
 
     public boolean isExecCmd() {

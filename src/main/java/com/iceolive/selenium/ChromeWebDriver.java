@@ -370,9 +370,15 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
             } else if ("setStore".equals(command)) {
                 String storeKey = target;
                 String variableName = value;
-                Object o = variableMap.get(variableName);
+                Object obj;
+                if(StringUtil.isEmpty(variableName)){
+                    statement = "var _$map = arguments[0];" + statement;
+                    obj = webDriver.executeScript(statement, variableMap);
+                }else {
+                    obj = variableMap.get(variableName);
+                }
                 Map<String, Object> localStore = JsonUtil.loadJson(localStorePath);
-                localStore.put(storeKey, o);
+                localStore.put(storeKey, obj);
                 JsonUtil.saveJson(localStorePath, localStore);
 
             } else if ("getStore".equals(command)) {
@@ -385,7 +391,9 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 } else {
                     variableMap.put(variableName, StringUtil.isEmpty(defaultValue) ? null : defaultValue);
                 }
-            } else if ("alert".equals(command)) {
+            } else if("clearStore".equals(command)) {
+                JsonUtil.saveJson(localStorePath, new HashMap<>());
+            }else if ("alert".equals(command)) {
                 this.alert(target);
             } else if ("exec".equals(command)) {
                 statement = "var _$map = arguments[0];" + statement;
@@ -443,7 +451,11 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     if (Pattern.matches("^\\d+$", target)) {
                         int count = Integer.parseInt(target);
                         int $index = 0;
-                        while (count > 0) {
+                        if(StringUtil.isNotEmpty(timeout)){
+                            $index = Integer.parseInt(timeout);
+                        }
+                        int start = $index;
+                        while (count > start) {
                             if (StringUtil.isNotEmpty(value)) {
                                 variableMap.put(value, $index++);
                             }

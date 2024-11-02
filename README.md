@@ -251,6 +251,15 @@ end
 
 ```
 ```js
+//指定循环次数时获取下标，第一个参数为循环次数，第二个参数为下标变量名，第三个参数为起始坐标，当大于0时，循环次数会减去起始坐标。
+repeat 3 i 1
+begin
+//输出下标
+log %i%
+end
+
+```
+```js
 set a
 <script>
 return [1,2,3]
@@ -478,10 +487,22 @@ switchWindow 7AEAE4DD9BA147414900601C0D4CFFCF
 //b为变量的key
 setStore a b
 ```
+```js
+//值需计算的持久化
+//a 为存储的key
+setStore a
+<script>
+    return 1;
+</script>
+```
 ### 42.获取持久化变量
 ```js
 //a为持久化的key 
 //b为变量的key
 //c为可选参数，表示默认值。如果没有持久化数据，则返回默认值，只支持字符串默认值
 getStore a b c
+```
+### 43.清除所有本地持久化
+```js
+clearStore
 ```
