@@ -506,3 +506,7 @@ getStore a b c
 ```js
 clearStore
 ```
+### 44.关闭浏览器
+```js
+close
+```

@@ -661,6 +661,8 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 variableMap.put(target, handlesList);
             } else if ("switchWindow".equals(command)) {
                 webDriver.switchTo().window(target);
+            }else if("close".equals(command)){
+                webDriver.close();
             }
         }
 

@@ -38,7 +38,8 @@ CodeMirror.defineMode("seleniumscript", function (config, parserConfig) {
     'setConn', 'querySql', 'execSql', 'cmd', 'wscript', '#headless', 'newStw', 'endStw',
     'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
     'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot',
-    'begin', 'then', 'else', 'end','#guest','resize','getWindowHandle','getWindowHandles','switchWindow'
+    'begin', 'then', 'else', 'end','#guest','resize','getWindowHandle','getWindowHandles','switchWindow',
+    'getStore','setStore','clearStore','close'
   ]
   var sqlKeywords = " alter and as asc between by count create delete desc distinct drop from group having in insert into is join like not on or order select set table union update values where limit ";
 
@@ -134,6 +135,18 @@ const getAllVariables = (editor, endLine) => {
     if (variable && !list.find(m => m == variable)) {
       list.push(variable)
     }
+    variable = line.match(/^\s*getStore\s+[^\s]+\s+([^\s]+)/)?.[1]
+    if(variable && !list.find(m => m == variable)){
+      list.push(variable)
+    }
+    variable = line.match(/^\s*repeat\s+[^\s]+\s+([^\s]+)/)?.[1]
+    if(variable && !list.find(m => m == variable)){
+      list.push(variable)
+    }
+    variable = line.match(/^\s*repeat\s+[^\s]\s+[^\s]+\s+([^\s]+)/)?.[1]
+    if(variable && !/^\d+$/.test(variable) && !variable.includes("%") && !list.find(m => m == variable)){
+      list.push(variable)
+    }
   }
   return list
 }
@@ -174,7 +187,7 @@ CodeMirror.registerHelper("hint", "seleniumscript", function (editor) {
         'setConn', 'querySql', 'execSql', 'cmd', 'wscript', '#headless', 'newStw', 'endStw',
         'win32_getByTitle', 'win32_getAllByPID', 'win32_getChildren', 'win32_getTitle',
         'win32_setTopMost', 'win32_showWindow', 'win32_getPID', 'win32_getDesktop', 'win32_screenshot','#guest','resize',
-        'getWindowHandle','getWindowHandles','switchWindow'
+        'getWindowHandle','getWindowHandles','switchWindow','getStore','setStore','clearStore','close'
       ]
       return { list: list.filter(m => m.toLowerCase().indexOf(str.toLowerCase()) == 0), from: CodeMirror.Pos(cursor.line, start), to: CodeMirror.Pos(cursor.line, end) }
     } else {
