@@ -365,7 +365,13 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                     statement = "var _$map = arguments[0];" + statement;
                     obj = webDriver.executeScript(statement, variableMap);
                 }
-                log.info("      -> " + obj);
+                if(obj instanceof  List){
+                    log.info("      -> List["+((List) obj).size()+"]");
+                }else if(obj instanceof Map){
+                    log.info("      -> Map{}");
+                }else {
+                    log.info("      -> " + obj);
+                }
                 variableMap.put(target, obj);
             } else if ("setStore".equals(command)) {
                 String storeKey = target;

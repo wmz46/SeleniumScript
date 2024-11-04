@@ -8,6 +8,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.openqa.selenium.JavascriptException;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -225,7 +226,10 @@ public class ChromeUtil {
 //            System.out.println(webDriver.getVariableMap());
             log.info("执行完毕");
 
-        } catch (Exception e) {
+        }catch (JavascriptException e){
+            log.error("执行出错:" + e.getRawMessage(),e);
+        }
+        catch (Exception e) {
             log.error("执行出错:" + e.toString());
         }
         if (headless) {
