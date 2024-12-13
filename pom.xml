@@ -288,8 +288,6 @@
             <groupId>com.yl</groupId>
             <artifactId>ddddocr4j</artifactId>
             <version>1.0.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/ddddocr4j-1.0.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -318,6 +316,17 @@
             <id>Spring Plugins</id>
             <name>Spring Plugins</name>
             <url>https://repo.spring.io/plugins-release/</url>
+        </repository>
+        <repository>
+            <id>g-ocps8537-wmz46-pub-mvn</id>
+            <name>pub-mvn</name>
+            <url>https://g-ocps8537-maven.pkg.coding.net/repository/wmz46/pub-mvn/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 </project>
