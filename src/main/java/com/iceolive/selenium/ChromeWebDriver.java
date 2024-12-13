@@ -357,7 +357,19 @@ public class ChromeWebDriver implements WebDriver, JavascriptExecutor, TakesScre
                 } catch (DocumentException e) {
                     e.printStackTrace();
                 }
-            } else if ("set".equals(command)) {
+            }else if("ocr".equals(command)){
+
+                    WebElement element1 = webDriver.findElement(By.cssSelector(target));
+                    if (element1.isDisplayed()) {
+                        byte[] byteArray = webDriver.getScreenshotAs(OutputType.BYTES);
+                        ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
+                        String code = DDDDOcrUtil.getCode(bais);
+                        variableMap.put(value, code);
+                    } else {
+                        log.error("元素不可见，无法截图：" + item.toString());
+                    }
+
+            }else if ("set".equals(command)) {
                 Object obj = null;
                 if (value != null) {
                     obj = value;

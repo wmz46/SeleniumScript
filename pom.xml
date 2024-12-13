@@ -284,6 +284,23 @@
             <artifactId>protobuf-java</artifactId>
             <version>3.16.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.yl</groupId>
+            <artifactId>ddddocr4j</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/ddddocr4j-1.0.0.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>1.14.0</version>
+        </dependency>
 
     </dependencies>
     <repositories>
