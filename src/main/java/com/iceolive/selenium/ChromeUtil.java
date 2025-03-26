@@ -1,6 +1,7 @@
 package com.iceolive.selenium;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
@@ -13,6 +14,7 @@ import org.openqa.selenium.JavascriptException;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * @author wangmianzhe
@@ -47,53 +49,13 @@ public class ChromeUtil {
 
     private static boolean downloadAndUnzip() throws IOException {
         String version = getVersion();
-
+        version = version.split("\\.")[0];
         if (version == null) {
             log.error("请先安装chrome浏览器");
             return false;
         } else {
-            version = version.split("\\.")[0];
+            String downloadPath = downloadDriver(version);
 
-            Request request;
-            Response response;
-            String downloadUrl;
-            if (Integer.parseInt(version) <= 114) {
-                String domain = chromeDriverDomain;
-                String url = domain + "/LATEST_RELEASE_" + version;
-                request = new Request.Builder()
-                        .url(url)
-                        .get()
-                        .build();
-                response = client.newCall(request).execute();
-                String fullVersion = response.body().string().trim();
-                downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
-            } else {
-                String url = "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_" + version;
-                request = new Request.Builder()
-                        .url(url)
-                        .get()
-                        .build();
-                response = client.newCall(request).execute();
-                String fullVersion = response.body().string().trim();
-                downloadUrl = "https://storage.googleapis.com/chrome-for-testing-public" + "/" + fullVersion + "/win32/chromedriver-win32.zip";
-            }
-
-            log.info("开始下载chromedriver...");
-            request = new Request.Builder().url(downloadUrl).build();
-            response = client.newCall(request).execute();
-            InputStream is;
-            is = response.body().byteStream();
-            FileOutputStream fos = null;
-            String downloadPath = System.getProperty("user.dir") + "\\chromedriver_win32.zip";
-            fos = new FileOutputStream(downloadPath);
-            int len;
-            byte[] bytes = new byte[4096];
-            while ((len = is.read(bytes)) != -1) {
-                fos.write(bytes, 0, len);
-            }
-            fos.flush();
-            is.close();
-            fos.close();
             if (Integer.parseInt(version) <= 114) {
                 ZipUtil.unzip(new File(downloadPath), System.getProperty("user.dir"), "");
             } else {
@@ -103,14 +65,91 @@ public class ChromeUtil {
         }
     }
 
+    public static String getFullVersion(String version) throws IOException {
+        Request request;
+        Response response;
+        try {
+            if (Integer.parseInt(version) <= 114) {
+                String domain = chromeDriverDomain;
+                String url = domain + "/LATEST_RELEASE_" + version;
+                request = new Request.Builder()
+                        .url(url)
+                        .get()
+                        .build();
+                response = client.newCall(request).execute();
+                String fullVersion = response.body().string().trim();
+                return fullVersion;
+            } else {
+                String url = "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_" + version;
+                request = new Request.Builder()
+                        .url(url)
+                        .get()
+                        .build();
+                response = client.newCall(request).execute();
+                String fullVersion = response.body().string().trim();
+                return fullVersion;
+            }
+        } catch (Exception e) {
+            request = new Request.Builder()
+                    .url("https://registry.npmmirror.com/-/binary/chrome-for-testing")
+                    .get()
+                    .build();
+            response = client.newCall(request).execute();
+            String json = response.body().string();
+            String fullVersion = null;
+            for (JsonNode node : JsonUtil.parse(json)) {
+                String name = node.get("name").asText();
+                if (name.startsWith(version + ".")) {
+                    fullVersion = name.replace("/", "");
+                }
+            }
+            return fullVersion;
+        }
+
+    }
+
+    public static String downloadDriver(String version) throws IOException {
+
+        Request request;
+        Response response;
+        String downloadUrl;
+        String fullVersion = getFullVersion(version);
+        log.info("开始下载chromedriver...");
+
+        if (Integer.parseInt(version) <= 114) {
+            String domain = chromeDriverDomain;
+            downloadUrl = domain + "/" + fullVersion + "/chromedriver_win32.zip";
+        } else {
+//                downloadUrl = "https://storage.googleapis.com/chrome-for-testing-public" + "/" + fullVersion + "/win32/chromedriver-win32.zip";
+            downloadUrl = "https://registry.npmmirror.com/-/binary/chrome-for-testing/" + fullVersion + "/win32/chromedriver-win32.zip";
+        }
+        request = new Request.Builder().url(downloadUrl).build();
+        response = client.newCall(request).execute();
+
+        InputStream is;
+        is = response.body().byteStream();
+        FileOutputStream fos = null;
+        String downloadPath = System.getProperty("user.dir") + "\\chromedriver_win32.zip";
+        fos = new FileOutputStream(downloadPath);
+        int len;
+        byte[] bytes = new byte[4096];
+        while ((len = is.read(bytes)) != -1) {
+            fos.write(bytes, 0, len);
+        }
+        fos.flush();
+        is.close();
+        fos.close();
+        return downloadPath;
+    }
+
     public static String getDriver() throws IOException {
         String chromedriver = System.getProperty("user.dir") + "\\chromedriver.exe";
         String edgedriver = System.getProperty("user.dir") + "\\msedgedriver.exe";
         boolean isChrome = new File(chromedriver).exists();
         boolean isEdge = new File(edgedriver).exists();
-        if(!isChrome && !isEdge){
+        if (!isChrome && !isEdge) {
             isEdge = EdgeUtil.downloadDriver();
-            if(!isEdge) {
+            if (!isEdge) {
                 isChrome = downloadAndUnzip();
             }
         }
@@ -125,6 +164,8 @@ public class ChromeUtil {
     }
 
     public static void main(String[] args) throws IOException {
+
+
         String script = "";
         String driver = getDriver();
         String proxy = null;
@@ -145,13 +186,13 @@ public class ChromeUtil {
                 isServer = true;
             } else if (arg.equals("-p")) {
                 port = Integer.parseInt(args[++i]);
-            } else if(arg.equals("-host")){
+            } else if (arg.equals("-host")) {
                 host = true;
             }
 
         }
         if (isServer) {
-            ChromeServer chromeServer = new ChromeServer(port,host);
+            ChromeServer chromeServer = new ChromeServer(port, host);
             chromeServer.start();
         } else {
             log.info("当前版本：" + VersionUtil.getVersion());
@@ -179,28 +220,28 @@ public class ChromeUtil {
         ChromeWebDriver webDriver;
         try {
             if (enableMob) {
-                webDriver = new ChromeWebDriver(driver, headless, guest,browserMobProxy);
+                webDriver = new ChromeWebDriver(driver, headless, guest, browserMobProxy);
             } else {
-                webDriver = new ChromeWebDriver(driver, headless,guest);
+                webDriver = new ChromeWebDriver(driver, headless, guest);
             }
         } catch (Exception e) {
             if (e.getMessage().contains("only supports Chrome version")) {
                 log.error("chromedriver版本不匹配！");
                 downloadAndUnzip();
                 if (enableMob) {
-                    webDriver = new ChromeWebDriver(driver, headless,guest, browserMobProxy);
+                    webDriver = new ChromeWebDriver(driver, headless, guest, browserMobProxy);
                 } else {
-                    webDriver = new ChromeWebDriver(driver, headless,guest);
+                    webDriver = new ChromeWebDriver(driver, headless, guest);
                 }
-            }else if(e.getMessage().contains("only supports Microsoft Edge version")){
+            } else if (e.getMessage().contains("only supports Microsoft Edge version")) {
                 log.error("edgedriver版本不匹配！");
                 EdgeUtil.downloadDriver();
                 if (enableMob) {
-                    webDriver = new ChromeWebDriver(driver, headless,guest, browserMobProxy);
+                    webDriver = new ChromeWebDriver(driver, headless, guest, browserMobProxy);
                 } else {
-                    webDriver = new ChromeWebDriver(driver, headless,guest);
+                    webDriver = new ChromeWebDriver(driver, headless, guest);
                 }
-            }else {
+            } else {
                 throw e;
             }
         }
@@ -210,7 +251,7 @@ public class ChromeUtil {
             int windowCount = 0;
             try {
                 windowCount = finalWebDriver.getWindowHandles().size();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 windowCount = 0;
             }
             if (windowCount == 0) {
@@ -226,10 +267,9 @@ public class ChromeUtil {
 //            System.out.println(webDriver.getVariableMap());
             log.info("执行完毕");
 
-        }catch (JavascriptException e){
-            log.error("执行出错:" + e.getRawMessage(),e);
-        }
-        catch (Exception e) {
+        } catch (JavascriptException e) {
+            log.error("执行出错:" + e.getRawMessage(), e);
+        } catch (Exception e) {
             log.error("执行出错:" + e.toString());
         }
         if (headless) {
